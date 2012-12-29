@@ -1,4 +1,4 @@
-algorithm
+code lib change-log
 =========
 
-my algorithm lib
+[2012-12-29] dlsym,RTLD_NEXT example
