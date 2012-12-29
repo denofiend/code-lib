@@ -1,0 +1,19 @@
+
+
+# dlsym example: foo.c, add.c
+
+gcc -fPIC -shared add.c -o libadd.so
+
+sudo cp libadd.so /usr/local/lib/
+
+# set /usr/local/lib to your ld path
+sudo vim /etc/ld.so.conf
+
+sudo /sbin/ldconfig
+
+gcc -ldl -ladd foo.c -o foo
+
+./foo 
+
+#output
+3
