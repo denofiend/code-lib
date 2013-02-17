@@ -1,0 +1,61 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.6	//
+CC	./makefile	/^CC =	gcc$/;"	m
+CFLAGS	./makefile	/^CFLAGS =  $/;"	m
+CPP	./makefile	/^CPP =	$/;"	m
+DOUBLE_LINKED_LIST_H_	./double_linked_list.h	9;"	d
+LINK	./makefile	/^LINK =	$(CC)$/;"	m
+SINGLE_LINKED_LIST_H	./single_linked_list.h	9;"	d
+create_list	./list/two_star.c	/^node* create_list(char*data, int n)$/;"	f	signature:(char*data, int n)
+data	./double_linked_list.h	/^	int data;$/;"	m	struct:double_linked_list_node_s	access:public
+data	./list/two_star.c	/^	char data;$/;"	m	struct:node	file:	access:public
+data	./single_linked_list.h	/^	int data;$/;"	m	struct:single_linked_list_node_s	access:public
+dlist_add	./double_linked_list.c	/^double_linked_list_node_t* dlist_add(double_linked_list_node_t* head, int val)$/;"	f	signature:(double_linked_list_node_t* head, int val)
+dlist_add	./double_linked_list.h	/^double_linked_list_node_t* dlist_add(double_linked_list_node_t* head, int val);$/;"	p	signature:(double_linked_list_node_t* head, int val)
+dlist_modify	./double_linked_list.c	/^double_linked_list_node_t* dlist_modify(double_linked_list_node_t* head, int val, int expect_val)$/;"	f	signature:(double_linked_list_node_t* head, int val, int expect_val)
+dlist_modify	./double_linked_list.h	/^double_linked_list_node_t* dlist_modify(double_linked_list_node_t* head, int val, int expect_val);$/;"	p	signature:(double_linked_list_node_t* head, int val, int expect_val)
+dlist_remove	./double_linked_list.c	/^void dlist_remove(double_linked_list_node_t** head, remove_fn rm, int val)$/;"	f	signature:(double_linked_list_node_t** head, remove_fn rm, int val)
+dlist_remove	./double_linked_list.h	/^void dlist_remove(double_linked_list_node_t** head, remove_fn rm, int val);$/;"	p	signature:(double_linked_list_node_t** head, remove_fn rm, int val)
+dlist_traversal	./double_linked_list.c	/^void dlist_traversal(double_linked_list_node_t* head)$/;"	f	signature:(double_linked_list_node_t* head)
+dlist_traversal	./double_linked_list.h	/^void dlist_traversal(double_linked_list_node_t* head);$/;"	p	signature:(double_linked_list_node_t* head)
+double_linked_list_node_s	./double_linked_list.h	/^struct double_linked_list_node_s{$/;"	s
+double_linked_list_node_s::data	./double_linked_list.h	/^	int data;$/;"	m	struct:double_linked_list_node_s	access:public
+double_linked_list_node_s::next	./double_linked_list.h	/^	double_linked_list_node_t *next;$/;"	m	struct:double_linked_list_node_s	access:public
+double_linked_list_node_s::prev	./double_linked_list.h	/^	double_linked_list_node_t *prev;$/;"	m	struct:double_linked_list_node_s	access:public
+double_linked_list_node_t	./double_linked_list.h	/^typedef struct double_linked_list_node_s double_linked_list_node_t;$/;"	t	typeref:struct:double_linked_list_node_s
+main	./double_linked_list.c	/^int main()$/;"	f
+main	./list/two_star.c	/^int main()$/;"	f
+main	./single_linked_list.c	/^int main(){$/;"	f
+next	./double_linked_list.h	/^	double_linked_list_node_t *next;$/;"	m	struct:double_linked_list_node_s	access:public
+next	./list/two_star.c	/^	struct node * next;$/;"	m	struct:node	typeref:struct:node::node	file:	access:public
+next	./single_linked_list.h	/^	single_linked_list_node_t *next;$/;"	m	struct:single_linked_list_node_s	access:public
+node	./list/two_star.c	/^typedef struct node$/;"	s	file:
+node	./list/two_star.c	/^} node;$/;"	t	typeref:struct:node	file:
+node::data	./list/two_star.c	/^	char data;$/;"	m	struct:node	file:	access:public
+node::next	./list/two_star.c	/^	struct node * next;$/;"	m	struct:node	typeref:struct:node::node	file:	access:public
+prev	./double_linked_list.h	/^	double_linked_list_node_t *prev;$/;"	m	struct:double_linked_list_node_s	access:public
+print_list	./list/two_star.c	/^void print_list(node* head)$/;"	f	signature:(node* head)
+remove_fn	./double_linked_list.c	/^int (* remove_fn) (double_linked_list_node_t const * v, int val)$/;"	f	signature:(double_linked_list_node_t const * v, int val)
+remove_fn	./double_linked_list.h	/^typedef int (* remove_fn) (double_linked_list_node_t const * v, int val);$/;"	t
+remove_fn	./list/two_star.c	/^typedef bool (* remove_fn)(node const * v);$/;"	t	file:
+remove_fn	./single_linked_list.h	/^typedef int (* remove_fn) (single_linked_list_node_t const * v, int val);$/;"	t
+remove_fn_	./list/two_star.c	/^bool  remove_fn_(node const*v){$/;"	f	signature:(node const*v)
+remove_fn_	./single_linked_list.c	/^int remove_fn_(single_linked_list_node_t const * v, int val)$/;"	f	signature:(single_linked_list_node_t const * v, int val)
+remove_if	./list/two_star.c	/^node * remove_if(node * head, remove_fn rm)$/;"	f	signature:(node * head, remove_fn rm)
+remove_if_two_star	./list/two_star.c	/^void remove_if_two_star(node ** head, remove_fn rm)$/;"	f	signature:(node ** head, remove_fn rm)
+single_linked_list_node_s	./single_linked_list.h	/^struct single_linked_list_node_s{$/;"	s
+single_linked_list_node_s::data	./single_linked_list.h	/^	int data;$/;"	m	struct:single_linked_list_node_s	access:public
+single_linked_list_node_s::next	./single_linked_list.h	/^	single_linked_list_node_t *next;$/;"	m	struct:single_linked_list_node_s	access:public
+single_linked_list_node_t	./single_linked_list.h	/^typedef struct single_linked_list_node_s single_linked_list_node_t;$/;"	t	typeref:struct:single_linked_list_node_s
+slist_add	./single_linked_list.c	/^single_linked_list_node_t* slist_add(single_linked_list_node_t* head, int val)$/;"	f	signature:(single_linked_list_node_t* head, int val)
+slist_add	./single_linked_list.h	/^single_linked_list_node_t* slist_add(single_linked_list_node_t* head, int val);$/;"	p	signature:(single_linked_list_node_t* head, int val)
+slist_modify	./single_linked_list.c	/^single_linked_list_node_t* slist_modify(single_linked_list_node_t* head, int val, int expect_val)$/;"	f	signature:(single_linked_list_node_t* head, int val, int expect_val)
+slist_modify	./single_linked_list.h	/^single_linked_list_node_t* slist_modify(single_linked_list_node_t* head, int val, int expect_val);$/;"	p	signature:(single_linked_list_node_t* head, int val, int expect_val)
+slist_remove	./single_linked_list.c	/^void slist_remove(single_linked_list_node_t** head, remove_fn rm, int val)$/;"	f	signature:(single_linked_list_node_t** head, remove_fn rm, int val)
+slist_remove	./single_linked_list.h	/^void slist_remove(single_linked_list_node_t** head, remove_fn rm, int val);$/;"	p	signature:(single_linked_list_node_t** head, remove_fn rm, int val)
+slist_traversal	./single_linked_list.c	/^void slist_traversal(single_linked_list_node_t* head)$/;"	f	signature:(single_linked_list_node_t* head)
+slist_traversal	./single_linked_list.h	/^void slist_traversal(single_linked_list_node_t* head);$/;"	p	signature:(single_linked_list_node_t* head)
