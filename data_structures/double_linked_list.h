@@ -30,5 +30,8 @@ double_linked_list_node_t* dlist_modify(double_linked_list_node_t* head, int val
 /* traversal the list, print into stdout */
 void dlist_traversal(double_linked_list_node_t* head);
 
+/* reversion tow adjacent node int the double linked list */
+void dlist_reversion(double_linked_list_node_t** head);
+
 #endif
 
