@@ -1,0 +1,22 @@
+POST /upload.html HTTP/1.1
+Host: 192.168.1.9:8080
+Connection: keep-alive
+Content-Length: 240
+Cache-Control: max-age=0
+Origin: file://
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundarydMXgOvzXltliXc7G
+Accept: application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/533.9 (KHTML, like Gecko) Maxthon/3.0 Safari/533.9
+Accept-Encoding: gzip,deflate
+Accept-Language: zh-CN
+Accept-Charset: iso-8859-1,*,utf-8
+
+------WebKitFormBoundarydMXgOvzXltliXc7G
+Content-Disposition: form-data; name="username"
+
+123
+------WebKitFormBoundarydMXgOvzXltliXc7G
+Content-Disposition: form-data; name="password"
+
+456
+------WebKitFormBoundarydMXgOvzXltliXc7G--

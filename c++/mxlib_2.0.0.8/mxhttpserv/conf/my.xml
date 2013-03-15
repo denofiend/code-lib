@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+	虚拟主机配置
+-->
+<virtual-server>
+	<!--
+		域名，必须配置
+	-->
+	<domain>pcbrw.stat.maxthon.cn</domain>
+	
+	<logger name="pcbrw.stat" level="5" filepath="INSTALL_PATH/log/pcbrw.stat.log" bufferSize="1024" />
+				
+	<!--
+		该主机的主目录，必须配置
+	-->
+	<root-dir>INSTALL_PATH/html/pcbrw.stat.maxthon.cn</root-dir>
+	
+	<!--
+		是否允许下载文件
+	-->
+	<download enable="1">
+		<allows>
+			<path></path>
+		</allows>
+		<denines>
+			<path></path>
+		</denines>
+	</download>
+	
+	<!--
+		处理程序配置
+	-->
+	<servlet>
+		<!-- 
+			uri 必须配置
+		-->
+		<uri>^/mt/srvstab(/)?$</uri>
+		
+		<!-- 
+			处理类,必须配置
+			lib_ext::HttpSingleFileUploadServlet 必须配置
+			path和filename两个参数 
+		-->
+		<class>mxhttp::HttpSingleFileUploadServlet</class>
+		
+		<!-- 初始化参数 -->
+		<params>
+			<param>
+				<name>path</name>
+				<value>INSTALL_PATH/html/pcbrw.stat.maxthon.cn/srvstab</value>
+			</param>
+			<param>
+				<name>filename</name>
+				<value>${time}.${pid}.${seq}.${client_ip}.zip</value>
+			</param>
+		</params>
+	</servlet>
+</virtual-server>

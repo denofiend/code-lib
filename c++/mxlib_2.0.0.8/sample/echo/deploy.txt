@@ -1,0 +1,52 @@
+echoserver/client 部署文档
+
+1. 操作系统
+32/64位 linux/freebsd
+
+2. 安装libevent
+tar xvf libevent-1.4.3-stable.tar.gz
+cd libevent-1.4.3-stable
+./configure
+sudo make install
+
+3. 安装libxml2
+gunzip libxml2-2.7.4.tar.gz
+tar -vxf libxml2-2.7.4.tar
+cd libxml2-2.7.4
+sudo sh ./configure
+sudo make install
+
+4. 编译
+
+4.1 mxcore
+cd ../../mxcore
+make
+
+4.2 mxsql
+cd ../../mxsql
+make
+
+4.3 mxasio
+cd ../../mxasio
+make
+
+4.4 mxhttp
+cd ../../mxhttp
+make
+
+4.5 echoserver
+cd serv
+make
+
+4.6 echoclient
+cd cli
+make
+
+5. 运行
+5.1 echoserver
+cd serv
+./echoserver <#port> <#maxConnection>
+
+5.2 echoclient
+cd cli
+./echoclient <#remoteIp> <port> <#processNum> <loop> <times>

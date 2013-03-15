@@ -1,0 +1,93 @@
+#-*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.61)
+
+AC_INIT([mxlib], [1.0.0], [])
+lt_major=1
+lt_age=0
+lt_revision=0
+dist_version=1.0.0
+AM_INIT_AUTOMAKE([mxlib], $dist_version)
+AC_SUBST(lt_major)
+AC_SUBST(lt_revision)
+AC_SUBST(lt_age)
+AC_CONFIG_SRCDIR([mxcore/include/mxcore/Assert.h])
+AC_CONFIG_HEADER([config.h])
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_LIBTOOL
+
+# Checks for libraries.
+
+# FIXME: Replace `main' with a function in `-lmysqlclient':
+#AC_CHECK_LIB([pcre], [main])
+# FIXME: Replace `main' with a function in `-lmysqlclient':
+#AC_CHECK_LIB([mysqlclient], [main])
+# FIXME: Replace `main' with a function in `-lpthread':
+#AC_CHECK_LIB([pthread], [main])
+# FIXME: Replace `main' with a function in `-lxml2':
+#AC_CHECK_LIB([xml2], [main])
+# FIXME: Replace `main' with a function in `-levent':
+#AC_CHECK_LIB([event], [main])
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(iconv.h, has_iconv=1,  has_iconv=0)
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_INT8_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_FORK
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_SELECT_ARGTYPES
+AC_TYPE_SIGNAL
+AC_FUNC_STAT
+AC_FUNC_STRFTIME
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS([floor gettimeofday localtime_r memchr memset select socket strcasecmp strerror strncasecmp strtol strtoul strtoull])
+
+AC_MSG_CHECKING(whether iconv takes const char ** or char **)
+AC_TRY_COMPILE([#include <iconv.h>],[
+{
+char** inbuf;
+size_t ret = iconv((iconv_t)-1, inbuf, 0, 0, 0);
+}], iconv_oldstyle=1, iconv_oldstyle=0)
+
+if test $iconv_oldstyle = 1; then
+	AC_MSG_RESULT(char **)
+else
+	AC_MSG_RESULT(const char**)
+	AC_DEFINE([ICONV_CONST], [], ["test const"])
+fi
+
+AC_OUTPUT(Makefile
+	mxcore/Makefile
+	mxcore/src/Makefile
+	mxsql/Makefile
+	mxsql/src/Makefile
+	mxasio/Makefile
+	mxasio/src/Makefile
+	mxhttp/Makefile
+	mxhttp/src/Makefile)

@@ -1,0 +1,50 @@
+mxhttpserv 部署文档
+
+1. 操作系统
+32/64位 linux/freebsd
+
+2. 安装libevent
+tar xvf libevent-1.4.3-stable.tar.gz
+cd libevent-1.4.3-stable
+./configure
+sudo make install
+
+3. 安装libxml2
+gunzip libxml2-2.7.4.tar.gz
+tar -vxf libxml2-2.7.4.tar
+cd libxml2-2.7.4
+sudo sh ./configure
+sudo make install
+
+4. 安装pcre
+tar xvfz pcre-8.02.tar.bz2
+cd pcre-8.02
+./configure
+make
+sudo make install
+
+5. 安装mxlib
+
+5.1 mxlib
+cd ../
+make
+sudo make install
+
+5.2 mxhttpserv
+linux 系统
+cd mxhttpserv
+make -f linux.mk
+freebsd 系统
+make -f freebsd.mk
+chmod 755 install.sh
+sudo ./install <INSTALL_PATH> <SERVER_NAME>
+
+6. 配置
+sudo vi INSTALL_PATH/SERVER_NAME/conf/mxhttpserv.xml
+根据配置文件说明进行配置
+
+7. 启动
+sudo INSTALL_PATH/SERVER_NAME/script/SERVER_NAME.sh start
+
+8. 停止
+sudo INSTALL_PATH/SERVER_NAME/script/SERVER_NAME.sh stop

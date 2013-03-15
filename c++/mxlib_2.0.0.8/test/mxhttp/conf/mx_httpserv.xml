@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<http>
+	<base>
+		<!--
+			指定运行此程序的用户
+		-->
+		<username>www</username>
+		
+		<!--
+			ip: 
+				字符串类型
+				HTTP服务器监听的ip地址或者主机名, 0.0.0.0代表绑定本机所有地址
+				默认为 0.0.0.0
+			port: 
+				无符号短整型(0 ~ 65535)
+				HTTP服务器监听的端口， unsigned short类型
+				默认为80
+		-->
+		<listen ip="192.168.1.99" port="8080" />
+		
+		<!--
+			number:
+				无符号短整数型 0～65535
+				工作者进程数量
+				默认为0，0代表cpu数量的两倍
+		-->
+		<process number="0" />
+		
+		<!--
+			recvTimeout: 
+				整数类型
+				指定接收数据的超时时间 ，单位为毫秒
+				默认为 5000毫秒
+			maxPerProcess：
+				无符号短整型(0 ~ 65535)
+				指定每个子进程最大保持的连接数量
+				默认为1000
+			keepAliveTimeout: 
+				整数类型
+				指定每个连接保持空闲的时间，<=0表示立即断开，大于0表示保持时间，单位为毫秒
+				默认为0
+			forceKeepAlive:
+				是否强制执行keepAliveTimeout, 0 表示不强制，1表示强制
+		-->
+		<connection recvTimeout="5000" maxPerProcess="5000" keepAliveTimeout="10000" forceKeepAlive="1"/>
+		
+		<!--
+			bufferSize: 
+				整数类型
+				指定用于接收HTTP请求头的buffer大小,单位为字节
+				默认为4096
+			tmpPath: 
+				字符串类型
+				指定解析HTTP请求时，用于存放缓存文件的目录
+			maxContentLength: 
+				整数类型
+				指定HTTP请求的body的最大长度，单位为字节
+				默认为40960
+		-->
+		<parser bufferSize="4096" tmpPath="/Users/zhaojiangang" maxContentLength="40960000"/>
+		
+		<!-- 
+			日志配置
+			level: 
+				整数类型
+				指定logger输出的级别，
+					0；不输出任何日志
+					1；ERROR级别
+					2；WANRNING级别
+					3；INFO级别
+					4；DEBUG级别
+					5；TRACE级别
+				默认值为3
+			filepath:
+				字符串类型
+				指定logger输出的文件，如果是空则输出到stdout
+		-->
+		<loggers>
+			<logger name="mxsql" level="5" filepath="" bufferSize="1024"/>
+			<logger name="mxasio.ioservice" level="6" filepath="" bufferSize="1024"/>
+			<logger name="mxasio.tcpserv" level="5" filepath="" bufferSize="1024"/>
+			<logger name="mxhttp" level="5" filepath="" bufferSize="1024"/>
+		</loggers>
+	</base>
+	
+
+	<!--
+		虚拟主机配置
+	-->
+	<virtual-server>
+		<!--
+			域名，必须配置
+		-->
+		<domain>192.168.1.99</domain>
+		
+		<!--
+			该主机的主目录，必须配置
+		-->
+		<root-dir>/Users/zhaojiangang/</root-dir>
+		
+		<!--
+			是否允许下载文件
+		-->
+		<download enable="1">
+			<allows>
+				<path></path>
+			</allows>
+			<denines>
+				<path></path>
+			</denines>
+		</download>
+		
+		<!-- 
+			日志配置
+			level: 
+				整数类型
+				指定logger输出的级别，
+					0；不输出任何日志
+					1；ERROR级别
+					2；WANRNING级别
+					3；INFO级别
+					4；DEBUG级别
+					5；TRACE级别
+				默认值为3
+			filepath:
+				字符串类型
+				指定logger输出的文件，如果是空则输出到stdout
+		-->
+		<logger level="5" filepath="/data/www.test.com/log/test_com.log" />
+		
+		<!--
+			处理程序配置
+		-->
+		<servlet>
+			<!-- 
+				uri 必须配置
+			-->
+			<uri>^/sayhello/\d{1,10}/\d{1,20}(/)?$</uri>
+			
+			<!-- 
+				处理类,必须配置
+				lib_ext::UploadServlet 必须配置
+				path和filename两个参数 
+			-->
+			<class>mxhttp::SayHelloServlet</class>
+			
+			<!-- 初始化参数 -->
+			<params>
+			</params>
+		</servlet>
+		
+		<servlet>
+			<!-- shutdown处理程序 -->
+			<uri>^/shutdown</uri>
+			<class>mxhttp::ShutdownServlet</class>
+		</servlet>
+	</virtual-server>
+</http>
