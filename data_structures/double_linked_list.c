@@ -144,10 +144,10 @@ void dlist_reversion(double_linked_list_node_t** head)
 			s->next->prev = f;
 		}
 
-		// if f->prev if not null, set f->prev->next = f->next;
+		// if f->prev if not null, set f->prev->next = s
 		if (f->prev)
 		{
-			f->prev->next = f->next;
+			f->prev->next = s;
 		}
 
 		// swap the prev of f, s

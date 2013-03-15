@@ -48,6 +48,53 @@ bool hash_add(int n, int m) {
 	return true;
 }
 
+void init(){
+	memset(hash, 0, sizeof(hash));
+
+	for (int n = 12; n < MAXN; ++n) {
+
+		int digit_pre = 1, digit_bak = 1;
+		int i = n, m;
+
+		while (i)
+		{
+			i /= 10;
+			digit_pre *= 10;
+		}
+
+		i = n /10;
+		digit_bak = 10;
+		digit_pre /= 10;
+
+		while (i)
+		{
+			m = n % digit_bak;
+			m = m * digit_pre + n / digit_bak;	
+
+			i /= 10;
+			digit_pre /= 10;
+			digit_bak *= 10;
+
+			if (m > n && m < MAXN && !hash_find(n, m)) {
+				hash_add(n, m);
+			}
+		}
+	}
+}
+int cal1(int sta, int end) {
+	int ans = 0;
+	for (int n = sta; n <= end; ++n) {
+		hash_node_t * p = hash[n].next;
+		while (p)
+		{
+			if (p->val <= end) ans++;
+			p = p->next;
+		}
+
+	}
+	return ans;
+}
+
 int cal(int sta, int end) {
 
 	int ans = 0;
@@ -91,12 +138,13 @@ int cal(int sta, int end) {
 int main(){
 
 	int T, A, B;
+	init();
 
 	cin >> T;
 
 	for (int i = 1; i <= T; ++i) {
 		cin >> A >> B;
-		cout << "Case #" << i << ": " << cal(A, B) << endl; 
+		cout << "Case #" << i << ": " << cal1(A, B) << endl; 
 	}
 
 	return 0;

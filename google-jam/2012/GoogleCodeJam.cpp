@@ -7,7 +7,7 @@
 #include <set>
 #include <sstream>
 #include <Windows.h>
-#include <boost/tokenizer.hpp>
+//#include <boost/tokenizer.hpp>
 
 using namespace std;
 
@@ -24,13 +24,13 @@ public:
    __int64 readInt64() { __int64 x; *this >> x; return x; }
 };
 
-vector<string> parse( const string& s, const string& delimeters = " ,\t" )
-{
-   vector<string> ret;
-   boost::tokenizer<boost::char_separator<char>> tokens( s, boost::char_separator<char>( delimeters.c_str() ) );
-   copy( tokens.begin(), tokens.end(), back_inserter( ret ) );
-   return ret;
-}
+//vector<string> parse( const string& s, const string& delimeters = " ,\t" )
+//{
+//   vector<string> ret;
+//   boost::tokenizer<boost::char_separator<char>> tokens( s, boost::char_separator<char>( delimeters.c_str() ) );
+//   copy( tokens.begin(), tokens.end(), back_inserter( ret ) );
+//   return ret;
+//}
 
 class FileWriter : public ofstream
 {
@@ -40,20 +40,34 @@ public:
    //int writeString( const string& str ) { *this << str; }
 };
 
-string doit( FileReader& fin )
+int doit( FileReader& fin )
 {
-   string m = "yhesocvxduiglbkrztnwjpfmaq";
-   set<char> st( m.begin(), m.end() );
-   string s = fin.readLine();
-   for ( int i = 0; i < (int) s.length(); i++ )
-      if ( islower( s[i] ) )
-         s[i] = m[s[i]-'a'];
-   return s;
+   int A = fin.readInt();
+   int B = fin.readInt();
+
+   int ten = 1;
+   int D = 0;
+   while ( ten <= A ) { ten *= 10; D++; }
+   
+   set<__int64> st;
+   for ( int i = A; i <= B; i++ )
+   {
+      int n = i;
+      for ( int k = 0; k < D; k++, n = (n+n%10*ten)/10 )
+      {
+         if ( n >= A && n < i )
+         {
+            st.insert( n * 100000000LL + i );
+         }
+      }
+   }
+
+   return (int) st.size();
 }
 
 void main()
 {
-   FileReader fin( "A-small-attempt0.in" );
+   FileReader fin( "C-large.in" );
    FileWriter fout( "out.txt" );
    int T = fin.readInt();
    fin.readLine();
