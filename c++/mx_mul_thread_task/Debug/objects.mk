@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lmxcore -lmxsql
+LIBS := -lmxcore -lcurl -ljson_linux-gcc-4.1.2_libmt  -lmxsql
 
