@@ -1,0 +1,8 @@
+2013-03-18 15:41:52 [1400] [sync] [INFO]: Begin sync to center
+2013-03-18 15:41:52 [1400] [sync] [TRACE]: >>> SyncTask::run
+2013-03-18 15:41:52 [1400] [sync] [TRACE]: >>> SyncTask::getOneTask
+2013-03-18 15:41:52 [1400] [sync] [INFO]: SyncTask::getOneTask success ({"json":"{\"address\":\"chaoyang,beijing\",\"avatar_url\":\"/avatar/5/654/5654371/1306818082.gif\",\"backup_email\":\"maxthon@maxthon.net\",\"birthday\":\"1990-10-10\",\"city\":\"beijing\",\"first_name\":\"zhaoxu\",\"gender\":1,\"home_city\":\"beijing\",\"home_location\":\"cn\",\"home_province\":\"beijing\",\"im_type\":\"1,2\",\"im_value\":\"12345678,service@hotmail.com\",\"last_name\":\"xu\",\"location\":\"cn\",\"mobile_number\":\"18843459184\",\"nickname\":\"zhaoxu-2013-03-16\",\"password\":\"134567\",\"personalid\":\"287465238913568761\",\"phone_number\":\"62547724\",\"province\":\"beijing\",\"qq\":\"12345678\",\"realname\":\"zhaoxu\",\"status\":3,\"timezone\":\"1\",\"update_time\":\"1363327051\",\"user_id\":14,\"zipcode\":\"100101\"}\n","queue_id":7,"type":0,"user_id":14}
+)
+2013-03-18 15:41:52 [1400] [sync] [ERROR]: Json parse error: json()
+2013-03-18 15:41:52 [1400] [sync] [ERROR]: Json parse error: json() error(code error)
+2013-03-18 15:41:54 [1400] [sync] [INFO]: Begin sync to center
