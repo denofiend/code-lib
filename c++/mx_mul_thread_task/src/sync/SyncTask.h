@@ -21,7 +21,8 @@ class SyncTask: public mxcore::Runnable
 
 public:
 
-	SyncTask(mxsql::DataSource* datasource, const std::string&syncUri);
+	SyncTask(mxsql::DataSource* datasource, const std::string&syncUri,
+			int sleepTime);
 
 	virtual ~SyncTask();
 
@@ -31,11 +32,34 @@ private:
 
 	mxsql::DataSource* datasource_;
 	std::string syncUri_;
+	int sleepTime_;
 
 private:
 	TaskBean getOneTask();
 
 	bool delTask(uint32_t queue_id);
+
+};
+
+class MinQidTask: public mxcore::Runnable
+{
+public:
+	MinQidTask(mxsql::DataSource* datasource, const std::string&uri,
+			int sleepTime, int idcId);
+	virtual ~MinQidTask();
+
+	virtual void run(void);
+private:
+
+	mxsql::DataSource* datasource_;
+	std::string uri_;
+	int sleepTime_;
+	int idcId_;
+
+private:
+	uint32_t getMinQidTask();
+
+	std::string getReqJson(uint32_t qid);
 
 };
 

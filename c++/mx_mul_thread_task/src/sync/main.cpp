@@ -13,6 +13,7 @@
 #include <mxsql/ThreadedDataSource.h>
 #include <mxsql/mysql/MysqlConnectionFactory.h>
 #include <mxcore/Thread.h>
+#include <mxcore/SystemOps.h>
 #include <list>
 #include "sync/UpdateDbTask.h"
 #include "mul_task//TaskThread.h"
@@ -32,6 +33,12 @@ struct Config
 	std::string syncUri_;
 
 	mxcore::LoggerFactory::LoggerConfig logConfig_;
+
+	int syncSleepTime_;
+
+	std::string minIdUri_;
+	int minIdSleepTime_;
+	int idcId_;
 
 };
 
@@ -59,12 +66,17 @@ void parseConfig(const mxcore::IniParser& parser, Config&conf,
 	parser.getValue(db, "waitTimeout_", conf.dsConfig.waitTimeout_);
 	parser.getValue(db, "maxCount_", conf.dsConfig.maxCount_);
 
-	parser.getValue(sync, "syncUri_", conf.syncUri_);
-
 	parser.getValue(sync, "name_", conf.logConfig_.name_);
 	parser.getValue(sync, "level_", conf.logConfig_.level_);
 	parser.getValue(sync, "bufferSize_", conf.logConfig_.bufferSize_);
 	parser.getValue(sync, "filepath_", conf.logConfig_.filepath_);
+
+	parser.getValue(sync, "syncUri_", conf.syncUri_);
+	parser.getValue(sync, "syncSleepTime_", conf.syncSleepTime_);
+
+	parser.getValue(sync, "minIdUri_", conf.minIdUri_);
+	parser.getValue(sync, "minIdSleepTime_", conf.minIdSleepTime_);
+	parser.getValue(sync, "idcId_", conf.idcId_);
 }
 
 static bool getHomeDir(char* argv[], std::string& homeDir)
@@ -81,6 +93,9 @@ static bool getHomeDir(char* argv[], std::string& homeDir)
 
 int main(int argc, char* argv[])
 {
+
+	mxos::daemonInit(argv[0], "", 0);
+
 	std::string fileName;
 
 	std::string homeDir;
@@ -93,7 +108,7 @@ int main(int argc, char* argv[])
 	Config userApiConfig;
 	mxcore::IniParser parser;
 	parser.parseFile(fileName);
-	parseConfig(parser, userApiConfig,"user_api_db", "user_api_sync");
+	parseConfig(parser, userApiConfig, "user_api_db", "user_api_sync");
 
 	mxsql::MysqlConnectionFactory factory;
 
@@ -114,29 +129,31 @@ int main(int argc, char* argv[])
 	while (1)
 	{
 		logger().info("Begin sync to center\n");
+//
 
-		{
-			mx_mul::SyncTaskPtr task(
-					new mx_mul::SyncTask(dataSource, userApiConfig.syncUri_));
+		mx_mul::SyncTaskPtr task(
+				new mx_mul::SyncTask(dataSource, userApiConfig.syncUri_,
+						userApiConfig.syncSleepTime_));
 
-			taskQueue->push(task);
-		}
+		taskQueue->push(task);
 
-		for (int i = 0; i < threadCount; ++i)
-		{
-			mx_mul::SyncTaskPtr task;
-			taskQueue->push(task);
-		}
+		mxcore::Thread::sleep(3000);
 
-		for (list<mx_mul::TaskThreadPtr>::iterator it = threads.begin();
-				it != threads.end(); ++it)
-				{
-
-			it->get()->join();
-		}
-
-		mxcore::Thread::sleep(2000);
 	}
+
+	for (int i = 0; i < threadCount; ++i)
+	{
+		mx_mul::SyncTaskPtr task;
+		taskQueue->push(task);
+	}
+	//
+	for (list<mx_mul::TaskThreadPtr>::iterator it = threads.begin();
+			it != threads.end(); ++it)
+			{
+
+		it->get()->join();
+	}
+
 	return 0;
 }
 

@@ -8,20 +8,10 @@
 #include "sync/SyncTask.h"
 #include "sync/HttpsClient.h"
 #include "sync/MyLogger.h"
+#include <mxcore/Thread.h>
 
 namespace mx_mul
 {
-
-SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri) :
-		datasource_(datasource), syncUri_(syncUri)
-{
-
-}
-
-SyncTask::~SyncTask()
-{
-
-}
 
 static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 {
@@ -43,8 +33,51 @@ static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 	return true;
 }
 
+static bool responseOk(const std::string & json)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger().error("Json parse error: json(%s)\n", json.c_str());
+
+		}
+	} catch (std::exception& e)
+	{
+		logger().error("Json parse error: json(%s) error(%s)\n", json.c_str(),
+				e.what());
+	}
+
+	uint32_t code;
+	if (decode(jsonValue, "code", code))
+	{
+		return (1 == code);
+	}
+	else
+	{
+		return false;
+	}
+}
+
+SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri,
+		int sleepTime) :
+		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime)
+{
+
+}
+
+SyncTask::~SyncTask()
+{
+
+}
+
 void SyncTask::run(void)
 {
+	mxcore::Thread::sleep(sleepTime_);
+
 	logger().trace(">>> SyncTask::run\n");
 
 	// get one task from queue_table.
@@ -57,24 +90,8 @@ void SyncTask::run(void)
 	std::string resJson = client.httpPost(syncUri_, task.toJsonString());
 
 	// if success. del the task.
-	Json::Reader reader;
-	Json::Value jsonValue;
 
-	try
-	{
-		if (!reader.parse(resJson, jsonValue))
-		{
-			logger().error("Json parse error: json(%s)\n", resJson.c_str());
-
-		}
-	} catch (std::exception& e)
-	{
-		logger().error("Json parse error: json(%s) error(%s)\n",
-				resJson.c_str(), e.what());
-	}
-
-	uint32_t code;
-	if (decode(jsonValue, "code", code))
+	if (responseOk(resJson))
 	{
 		if (delTask(task.getQueueId()))
 		{
@@ -87,8 +104,8 @@ void SyncTask::run(void)
 	}
 	else
 	{
-		logger().error("Json parse error: json(%s) error(%s)\n",
-				resJson.c_str(), "code error");
+
+		logger().error("center service response error\n");
 	}
 
 }
@@ -159,4 +176,86 @@ bool SyncTask::delTask(uint32_t queue_id)
 	return (0 != ret);
 }
 
-} /* namespace mx_user_api */
+}
+
+mx_mul::MinQidTask::MinQidTask(mxsql::DataSource* datasource,
+		const std::string&uri, int sleepTime, int idcId) :
+		datasource_(datasource), uri_(uri), sleepTime_(sleepTime), idcId_(idcId)
+{
+}
+
+mx_mul::MinQidTask::~MinQidTask()
+{
+}
+
+std::string mx_mul::MinQidTask::getReqJson(uint32_t qid)
+{
+	Json::Value data;
+
+	data["from_idc_id"] = this->idcId_;
+	data["min_queue_id"] = qid;
+
+	Json::FastWriter writer;
+	std::string res = writer.write(data);
+
+	logger().info("MinQidTask::getReqJson (%s)\n", res.c_str());
+
+	return res;
+}
+void mx_mul::MinQidTask::run(void)
+{
+	mxcore::Thread::sleep(sleepTime_);
+	logger().trace(">>> MinQidTask::run\n");
+
+	//get min id task in qu
+	uint32_t qid = getMinQidTask();
+
+	// send to center service.
+	HttpsClient client;
+	std::string resJson = client.httpPost(uri_, getReqJson(qid));
+
+	if (responseOk(resJson))
+	{
+		logger().info("send succed\n");
+	}
+	else
+	{
+		logger().info("send failed\n");
+	}
+
+}
+
+uint32_t mx_mul::MinQidTask::getMinQidTask()
+{
+	logger().trace(">>> MinQidTask::getMinQidTask\n");
+
+	uint32_t qid;
+
+	try
+	{
+		std::string sql = "select min(`queue_id`) from `transaction_table`";
+
+		std::auto_ptr<mxsql::SqlConnection> connection(
+				datasource_->getConnection());
+
+		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+				connection->preparedStatement(sql));
+
+		std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
+
+		if (rs->next())
+		{
+			qid = rs->getUInt(1);
+		}
+	} catch (mxsql::SqlException & e)
+	{
+		logger().error("Mysql Error: code(%d), message(%s)\n", e.getErrorCode(),
+				e.getMessage().c_str());
+	}
+
+	logger().info("MinQidTask::getMinQidTask success qid(%d)\n", qid);
+
+	return qid - 1;
+}
+
+/* namespace mx_user_api */
