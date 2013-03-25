@@ -54,7 +54,7 @@ static bool responseOk(const std::string & json)
 	uint32_t code;
 	if (decode(jsonValue, "code", code))
 	{
-		return (1 == code);
+		return (200 == code || 409 == code);
 	}
 	else
 	{
@@ -63,8 +63,9 @@ static bool responseOk(const std::string & json)
 }
 
 SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri,
-		int sleepTime) :
-		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime)
+		int sleepTime, uint32_t idc_id) :
+		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime), idc_id_(
+				idc_id)
 {
 
 }
@@ -87,7 +88,13 @@ void SyncTask::run(void)
 	HttpsClient client;
 	std::string json;
 
-	std::string resJson = client.httpPost(syncUri_, task.toJsonString());
+	logger().debug("syncUri(%s)\n", syncUri_.c_str());
+
+	std::string resJson = client.httpPost(syncUri_, task.toJsonString(),
+			"application/json");
+
+	logger().info("user-api-center.maxthon.com response(%s)\n",
+			resJson.c_str());
 
 	// if success. del the task.
 
@@ -118,7 +125,7 @@ TaskBean SyncTask::getOneTask()
 	try
 	{
 		std::string sql =
-				"select `json`,`queue_id`,`type`,`user_id` from `transaction_table` order by `queue_id` limit 1";
+				"select `json`,`queue_id`,`type`,`user_id` from `roll_transaction` order by `queue_id` limit 1";
 
 		std::auto_ptr<mxsql::SqlConnection> connection(
 				datasource_->getConnection());
@@ -130,12 +137,14 @@ TaskBean SyncTask::getOneTask()
 
 		if (rs->next())
 		{
-			task.setJson(rs->getString(1));
+			task.setData(rs->getString(1));
 			task.setQueueId(rs->getUInt(2));
 			task.setType(rs->getUInt(3));
 			task.setUserId(rs->getUInt(4));
+			task.setIdcId(idc_id_);
 
 		}
+
 	} catch (mxsql::SqlException & e)
 	{
 		logger().error("Mysql Error: code(%d), message(%s)\n", e.getErrorCode(),
@@ -162,7 +171,7 @@ bool SyncTask::delTask(uint32_t queue_id)
 	// delete transaction_table
 	{
 		const std::string sql =
-				"delete from `transaction_table` where `queue_id` = ?";
+				"delete from `roll_transaction` where `queue_id` = ?";
 
 		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 				connection->preparedStatement(sql));
@@ -233,7 +242,7 @@ uint32_t mx_mul::MinQidTask::getMinQidTask()
 
 	try
 	{
-		std::string sql = "select min(`queue_id`) from `transaction_table`";
+		std::string sql = "select min(`queue_id`) from `roll_transaction`";
 
 		std::auto_ptr<mxsql::SqlConnection> connection(
 				datasource_->getConnection());

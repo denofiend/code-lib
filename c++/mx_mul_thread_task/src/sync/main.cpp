@@ -16,13 +16,13 @@
 #include <mxcore/SystemOps.h>
 #include <list>
 #include "sync/UpdateDbTask.h"
-#include "mul_task//TaskThread.h"
-#include "mul_task//TaskQueue.h"
+#include "mul_task/TaskThread.h"
+#include "mul_task/TaskQueue.h"
 #include "sync/MyLogger.h"
 
 using namespace std;
 
-#define threadCount 2
+#define threadCount 1
 
 #define UserCount 12074458
 
@@ -128,14 +128,18 @@ int main(int argc, char* argv[])
 
 	while (1)
 	{
-		logger().info("Begin sync to center\n");
-//
 
 		mx_mul::SyncTaskPtr task(
 				new mx_mul::SyncTask(dataSource, userApiConfig.syncUri_,
-						userApiConfig.syncSleepTime_));
+						userApiConfig.syncSleepTime_, userApiConfig.idcId_));
 
 		taskQueue->push(task);
+
+//		mx_mul::MinQidTaskPtr minQidTask(
+//				new mx_mul::MinQidTask(dataSource, userApiConfig.minIdUri_,
+//						userApiConfig.minIdSleepTime_, userApiConfig.idcId_));
+
+//		taskQueue->push(minQidTask);
 
 		mxcore::Thread::sleep(3000);
 

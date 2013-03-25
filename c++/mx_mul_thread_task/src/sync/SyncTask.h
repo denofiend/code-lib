@@ -22,7 +22,7 @@ class SyncTask: public mxcore::Runnable
 public:
 
 	SyncTask(mxsql::DataSource* datasource, const std::string&syncUri,
-			int sleepTime);
+			int sleepTime, uint32_t idc_id);
 
 	virtual ~SyncTask();
 
@@ -33,6 +33,7 @@ private:
 	mxsql::DataSource* datasource_;
 	std::string syncUri_;
 	int sleepTime_;
+	uint32_t idc_id_;
 
 private:
 	TaskBean getOneTask();

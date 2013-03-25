@@ -19,7 +19,7 @@ MAIN_OBJS = ${MAIN_ROOT}/sync/HttpsClient.o \
 	 
 SYNC_OBJS = ${MAIN_OBJS}
 
-SYNC = bin/mx_sync
+SYNC = bin/mx_sync_serv
 
 CLEANFILES = core core.* *.core *.o 
 CXXFLAGS = -g -I${MAIN_ROOT}  \

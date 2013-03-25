@@ -11,9 +11,9 @@
 namespace mx_mul
 {
 
-TaskBean::TaskBean(const std::string&json, uint32_t user_id, uint32_t queue_id,
+TaskBean::TaskBean(const std::string&data, uint32_t user_id, uint32_t queue_id,
 		uint32_t type) :
-		json_(json), user_id_(user_id), queue_id_(queue_id), type_(type)
+		data_(data), user_id_(user_id), queue_id_(queue_id), type_(type)
 {
 }
 
@@ -23,20 +23,22 @@ TaskBean::~TaskBean()
 
 TaskBean::TaskBean(const TaskBean & src)
 {
-	this->json_ = src.json_;
+	this->data_ = src.data_;
 	this->user_id_ = src.user_id_;
 	this->queue_id_ = src.queue_id_;
 	this->type_ = src.type_;
+	this->idc_id_ = src.idc_id_;
 }
 
 TaskBean & TaskBean::operator =(const TaskBean & other)
 {
 	if (this != &other)
 	{
-		this->json_ = other.json_;
+		this->data_ = other.data_;
 		this->user_id_ = other.user_id_;
 		this->queue_id_ = other.queue_id_;
 		this->type_ = other.type_;
+		this->idc_id_ = other.idc_id_;
 	}
 	return *this;
 }
@@ -46,18 +48,42 @@ std::string TaskBean::toJsonString()
 	Json::Value data;
 
 	data["user_id"] = this->user_id_;
-	data["queue_id"] = this->queue_id_;
+	data["from_queue_id"] = this->queue_id_;
+	data["from_idc_id"] = this->idc_id_;
 	data["type"] = this->type_;
-	data["json"] = this->json_;
+
+	try
+	{
+		Json::Reader reader;
+		Json::Value jsonData;
+
+		if (!reader.parse(this->data_, jsonData))
+		{
+			return "";
+			//E_ERROR_PROTOCOL(std::string("Invalid json format"));
+		}
+
+		if (!jsonData["register_ip"].isNull()
+				&& jsonData["register_ip"].isString())
+		{
+			std::string register_ip = jsonData["register_ip"].asString();
+
+			jsonData.removeMember("register_ip");
+			jsonData["ip"] = register_ip;
+		}
+		data["data"] = jsonData;
+
+	} catch (std::exception& e)
+	{
+		return "";
+		//E_ERROR_PROTOCOL(e.what());
+	}
 
 	Json::FastWriter writer;
 	return writer.write(data);
 }
 
-std::string TaskBean::getJson() const
-{
-	return json_;
-}
+
 
 uint32_t TaskBean::getQueueId() const
 {
@@ -74,10 +100,7 @@ uint32_t TaskBean::getUserId() const
 	return user_id_;
 }
 
-void TaskBean::setJson(std::string json_)
-{
-	this->json_ = json_;
-}
+
 
 void TaskBean::setQueueId(uint32_t queue_id_)
 {
@@ -96,6 +119,26 @@ TaskBean::TaskBean()
 void TaskBean::setUserId(uint32_t user_id_)
 {
 	this->user_id_ = user_id_;
+}
+
+std::string TaskBean::getData() const
+{
+	return data_;
+}
+
+uint32_t TaskBean::getIdcId() const
+{
+	return idc_id_;
+}
+
+void TaskBean::setData(std::string data_)
+{
+	this->data_ = data_;
+}
+
+void TaskBean::setIdcId(uint32_t idc_id_)
+{
+	this->idc_id_ = idc_id_;
 }
 
 } /* namespace mx_mul */

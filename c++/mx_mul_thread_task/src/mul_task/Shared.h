@@ -21,6 +21,7 @@ typedef std::tr1::shared_ptr<mx_mul::TaskQueue> TaskQueuePtr;
 typedef std::tr1::shared_ptr<mx_mul::UpdateDbTask> UpdateDbTaskPtr;
 
 typedef std::tr1::shared_ptr<mx_mul::SyncTask> SyncTaskPtr;
+typedef std::tr1::shared_ptr<mx_mul::MinQidTask> MinQidTaskPtr;
 
 }
 
