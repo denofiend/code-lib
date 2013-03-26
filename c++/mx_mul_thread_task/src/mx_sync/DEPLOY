@@ -9,7 +9,9 @@
 
 4. sudo ./install.sh /data/ /data/logs/mx_user_sync
 
-5. sudo /data/mx_user_sync/script/mx_user_sync.sh start
+5. sudo vim /etc/hosts (10.100.15.16 user-api-center.maxthon.com)
 
-6. tail -f /data/logs/mx_user_sync/mx_user_api_sync.log
+6. sudo /data/mx_user_sync/script/mx_user_sync.sh start
+
+7. tail -f /data/logs/mx_user_sync/mx_user_api_sync.log
 
