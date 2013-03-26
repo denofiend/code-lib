@@ -1,9 +1,8 @@
 #!/bin/sh
 
 SHORT_NAME=SNAME
-echo SNAME
-#NAME=INSTALL_PATH/bin/SNAME
-NAME=./bin/mx_sync_serv
+NAME=INSTALL_PATH/bin/SNAME
+
 
 check_running()
 {

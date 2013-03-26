@@ -4,7 +4,7 @@ LINKER = $(CC)
 
 RM = /bin/rm -f
 
-MAIN_ROOT = ./
+MAIN_ROOT = ../
 	
 	
 MAIN_OBJS = ${MAIN_ROOT}/sync/HttpsClient.o \
@@ -19,7 +19,7 @@ MAIN_OBJS = ${MAIN_ROOT}/sync/HttpsClient.o \
 	 
 SYNC_OBJS = ${MAIN_OBJS}
 
-SYNC = bin/mx_sync_serv
+SYNC = bin/mx_user_sync
 
 CLEANFILES = core core.* *.core *.o 
 CXXFLAGS = -g -I${MAIN_ROOT}  \

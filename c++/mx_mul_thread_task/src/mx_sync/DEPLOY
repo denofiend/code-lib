@@ -1,0 +1,11 @@
+
+[deploy user sync of maxthon]
+
+1. make (or make -f Makefile_centos.mk)
+
+2. sudo ./install.sh /data/ /data/logs/mx_user_sync
+
+3. sudo /data/mx_user_sync/script/mx_user_sync.sh start
+
+4. tail -f /data/logs/mx_user_sync/mx_user_api_sync.log
+
