@@ -82,7 +82,12 @@ void SyncTask::run(void)
 	logger().trace(">>> SyncTask::run\n");
 
 	// get one task from queue_table.
-	TaskBean task = getOneTask();
+	TaskBean task;
+	if (!getOneTask(task))
+	{
+		logger().info("not found sync task\n");
+		return;
+	}
 
 	// sync to user center service of maxthon.
 	HttpsClient client;
@@ -97,7 +102,6 @@ void SyncTask::run(void)
 			resJson.c_str());
 
 	// if success. del the task.
-
 	if (responseOk(resJson))
 	{
 		if (delTask(task.getQueueId()))
@@ -117,11 +121,11 @@ void SyncTask::run(void)
 
 }
 
-TaskBean SyncTask::getOneTask()
+bool SyncTask::getOneTask(TaskBean& task)
 {
 	logger().trace(">>> SyncTask::getOneTask\n");
+	bool f = false;
 
-	TaskBean task;
 	try
 	{
 		std::string sql =
@@ -143,6 +147,7 @@ TaskBean SyncTask::getOneTask()
 			task.setUserId(rs->getUInt(4));
 			task.setIdcId(idc_id_);
 
+			f = true;
 		}
 
 	} catch (mxsql::SqlException & e)
@@ -154,7 +159,7 @@ TaskBean SyncTask::getOneTask()
 	logger().info("SyncTask::getOneTask success (%s)\n",
 			task.toJsonString().c_str());
 
-	return task;
+	return f;
 }
 
 bool SyncTask::delTask(uint32_t queue_id)

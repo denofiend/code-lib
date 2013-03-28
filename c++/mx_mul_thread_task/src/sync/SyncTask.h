@@ -36,7 +36,7 @@ private:
 	uint32_t idc_id_;
 
 private:
-	TaskBean getOneTask();
+	bool getOneTask(TaskBean &task);
 
 	bool delTask(uint32_t queue_id);
 
