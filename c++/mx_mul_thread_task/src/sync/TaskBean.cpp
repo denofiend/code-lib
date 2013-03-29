@@ -63,14 +63,15 @@ std::string TaskBean::toJsonString()
 			//E_ERROR_PROTOCOL(std::string("Invalid json format"));
 		}
 
-		if (!jsonData["register_ip"].isNull()
-				&& jsonData["register_ip"].isString())
+		if (!jsonData["register_ip"].isNull())
 		{
 			std::string register_ip = jsonData["register_ip"].asString();
 
 			jsonData.removeMember("register_ip");
 			jsonData["ip"] = register_ip;
 		}
+		if (0 == this->type_)
+			jsonData["first_name"] = Json::Value::null;
 		data["data"] = jsonData;
 
 	} catch (std::exception& e)
