@@ -6,6 +6,7 @@
  */
 
 #include "sync/TaskBean.h"
+#include "sync/MyLogger.h"
 #include <json/json.h>
 
 namespace mx_mul
@@ -63,15 +64,19 @@ std::string TaskBean::toJsonString()
 			//E_ERROR_PROTOCOL(std::string("Invalid json format"));
 		}
 
+		logger().debug("data(%s)\n", this->data_.c_str());
+
 		if (!jsonData["register_ip"].isNull())
 		{
 			std::string register_ip = jsonData["register_ip"].asString();
 
-			jsonData.removeMember("register_ip");
+			//jsonData.removeMember("register_ip");
 			jsonData["ip"] = register_ip;
 		}
 		if (0 == this->type_)
 			jsonData["first_name"] = Json::Value::null;
+
+		jsonData.removeMember("register_ip");
 		data["data"] = jsonData;
 
 	} catch (std::exception& e)
