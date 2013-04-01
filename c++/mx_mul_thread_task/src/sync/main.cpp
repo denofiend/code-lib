@@ -135,11 +135,11 @@ int main(int argc, char* argv[])
 
 		taskQueue->push(task);
 
-//		mx_mul::MinQidTaskPtr minQidTask(
-//				new mx_mul::MinQidTask(dataSource, userApiConfig.minIdUri_,
-//						userApiConfig.minIdSleepTime_, userApiConfig.idcId_));
+		mx_mul::MinQidTaskPtr minQidTask(
+				new mx_mul::MinQidTask(dataSource, userApiConfig.minIdUri_,
+						userApiConfig.minIdSleepTime_, userApiConfig.idcId_));
 
-//		taskQueue->push(minQidTask);
+		taskQueue->push(minQidTask);
 
 		mxcore::Thread::sleep(3000);
 
