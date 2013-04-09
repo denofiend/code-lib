@@ -70,6 +70,10 @@ std::string TaskBean::toJsonString()
 			jsonData.removeMember("register_ip");
 			jsonData["ip"] = register_ip;
 		}
+		else
+		{
+			jsonData.removeMember("register_ip");
+		}
 		if (0 == this->type_)
 			jsonData["first_name"] = Json::Value::null;
 		data["data"] = jsonData;
