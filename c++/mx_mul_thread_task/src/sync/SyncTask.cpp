@@ -226,7 +226,7 @@ void mx_mul::MinQidTask::run(void)
 
 	// send to center service.
 	HttpsClient client;
-	std::string resJson = client.httpPost(uri_, getReqJson(qid));
+	std::string resJson = client.httpPost(uri_, getReqJson(qid), "application/json");
 
 	if (responseOk(resJson))
 	{
