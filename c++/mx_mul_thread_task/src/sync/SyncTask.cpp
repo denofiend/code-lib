@@ -56,7 +56,7 @@ bool SyncTask::responseOk(const std::string & json)
 	uint32_t code;
 	if (decode(jsonValue, "code", code))
 	{
-		return (200 == code || 409 == code);
+		return (200 == code || 409 == code || 201 == code);
 	}
 	else
 	{
