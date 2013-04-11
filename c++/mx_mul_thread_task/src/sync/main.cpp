@@ -48,43 +48,6 @@ struct Config
 
 };
 
-void parseConfig(const mxcore::IniParser& parser, Config&conf,
-		const std::string& db, const std::string&sync)
-{
-
-	int autoCommit;
-
-	parser.getValue(db, "autoCommit_", autoCommit);
-	conf.dsConfig.dbConfig_.autoCommit_ = (autoCommit != 0);
-
-	parser.getValue(db, "username_", conf.dsConfig.dbConfig_.username_);
-	parser.getValue(db, "password_", conf.dsConfig.dbConfig_.password_);
-	parser.getValue(db, "charset_", conf.dsConfig.dbConfig_.charset_);
-	parser.getValue(db, "connectTimeout_",
-			conf.dsConfig.dbConfig_.connectTimeout_);
-	parser.getValue(db, "host_", conf.dsConfig.dbConfig_.host_);
-	parser.getValue(db, "dbname_", conf.dsConfig.dbConfig_.dbname_);
-	parser.getValue(db, "port_", conf.dsConfig.dbConfig_.port_);
-	parser.getValue(db, "heartbeatInterval_", conf.dsConfig.heartbeatInterval_);
-	parser.getValue(db, "heartbeatSql_", conf.dsConfig.heartbeatSql_);
-	parser.getValue(db, "idleCount_", conf.dsConfig.idleCount_);
-	parser.getValue(db, "idleTimeout_", conf.dsConfig.idleTimeout_);
-	parser.getValue(db, "waitTimeout_", conf.dsConfig.waitTimeout_);
-	parser.getValue(db, "maxCount_", conf.dsConfig.maxCount_);
-
-	parser.getValue(sync, "name_", conf.logConfig_.name_);
-	parser.getValue(sync, "level_", conf.logConfig_.level_);
-	parser.getValue(sync, "bufferSize_", conf.logConfig_.bufferSize_);
-	parser.getValue(sync, "filepath_", conf.logConfig_.filepath_);
-
-	parser.getValue(sync, "syncUri_", conf.syncUri_);
-	parser.getValue(sync, "syncSleepTime_", conf.syncSleepTime_);
-
-	parser.getValue(sync, "minIdUri_", conf.minIdUri_);
-	parser.getValue(sync, "minIdSleepTime_", conf.minIdSleepTime_);
-	parser.getValue(sync, "idcId_", conf.idcId_);
-}
-
 static bool getHomeDir(char* argv[], std::string& homeDir)
 {
 	homeDir = argv[0];
@@ -111,6 +74,8 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 	json.assign((std::istreambuf_iterator<char>(in)),
 	std::istreambuf_iterator<char>());
 
+	std::cout << "json (" << json << std::endl;
+
 	Json::Reader reader;
 	Json::Value jsonValue;
 
@@ -118,22 +83,18 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 	{
 		if (!reader.parse(json, jsonValue))
 		{
-			logger().error("Json parse error: json(%s)\n", json.c_str());
+			//logger().error("Json parse error: json(%s)\n", json.c_str());
 
 		}
 	} catch (std::exception& e)
 	{
-		logger().error("Json parse error: json(%s) error(%s)\n", json.c_str(),
-				e.what());
+//		logger().error("Json parse error: json(%s) error(%s)\n", json.c_str(),
+//				e.what());
 	}
 
-	Json::Value::Members members = jsonValue.getMemberNames();
-
-	for (Json::Value::Members::const_iterator it = members.begin();
-			it != members.end(); it++)
-			{
-
-		Json::Value app = *it;
+	for (int i = 0; i < jsonValue.size(); ++i)
+	{
+		Json::Value app = jsonValue[i];
 		Config config;
 
 		MxUtil::decode(app, "app", config.app_);
@@ -183,8 +144,6 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 int main(int argc, char* argv[])
 {
 
-	mxos::daemonInit(argv[0], "", 0);
-
 	std::string fileName;
 
 	std::string homeDir;
@@ -198,6 +157,8 @@ int main(int argc, char* argv[])
 
 	// parse json file config.
 	parserJsonFromFile(configs, fileName);
+
+	mxos::daemonInit(argv[0], "", 0);
 
 	mx_mul::TaskQueuePtr taskQueue(new mx_mul::TaskQueue());
 	list<mx_mul::TaskThreadPtr> threads;
@@ -226,13 +187,15 @@ int main(int argc, char* argv[])
 
 			mx_mul::SyncTaskPtr task(
 					new mx_mul::SyncTask(dataSource, conf.syncUri_,
-							conf.syncSleepTime_, conf.idcId_));
+							conf.syncSleepTime_, conf.idcId_,
+							conf.logConfig_.name_));
 
 			taskQueue->push(task);
 
 			mx_mul::MinQidTaskPtr minQidTask(
 					new mx_mul::MinQidTask(dataSource, conf.minIdUri_,
-							conf.minIdSleepTime_, conf.idcId_));
+							conf.minIdSleepTime_, conf.idcId_,
+							conf.logConfig_.name_));
 
 			taskQueue->push(minQidTask);
 		}

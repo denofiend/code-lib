@@ -8,15 +8,12 @@
 #ifndef MYLOGGER_H_
 #define MYLOGGER_H_
 
-
 #include <mxcore/Logger.h>
 #include <mxcore/LoggerFactory.h>
 
-
-static inline mxcore::Logger& logger(void)
+static inline mxcore::Logger& logger(const std::string&app)
 {
-	return mxcore::LoggerFactory::getInstance().getLogger("sync");
+	return mxcore::LoggerFactory::getInstance().getLogger(app);
 }
-
 
 #endif /* MYLOGGER_H_ */

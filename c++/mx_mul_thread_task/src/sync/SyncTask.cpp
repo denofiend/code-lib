@@ -33,7 +33,7 @@ static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 	return true;
 }
 
-static bool responseOk(const std::string & json)
+bool SyncTask::responseOk(const std::string & json)
 {
 	Json::Reader reader;
 	Json::Value jsonValue;
@@ -42,13 +42,14 @@ static bool responseOk(const std::string & json)
 	{
 		if (!reader.parse(json, jsonValue))
 		{
-			logger().error("Json parse error: json(%s)\n", json.c_str());
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
 
 		}
 	} catch (std::exception& e)
 	{
-		logger().error("Json parse error: json(%s) error(%s)\n", json.c_str(),
-				e.what());
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
 	}
 
 	uint32_t code;
@@ -63,9 +64,9 @@ static bool responseOk(const std::string & json)
 }
 
 SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri,
-		int sleepTime, uint32_t idc_id) :
+		int sleepTime, uint32_t idc_id, const std::string&logName) :
 		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime), idc_id_(
-				idc_id)
+				idc_id), logName_(logName)
 {
 
 }
@@ -77,15 +78,17 @@ SyncTask::~SyncTask()
 
 void SyncTask::run(void)
 {
-	mxcore::Thread::sleep(sleepTime_);
 
-	logger().trace(">>> SyncTask::run\n");
+	logger(logName_).trace(">>> SyncTask::run\n");
 
 	// get one task from queue_table.
 	TaskBean task;
 	if (!getOneTask(task))
 	{
-		logger().info("not found sync task\n");
+
+		logger(logName_).info("not found sync task\n");
+		mxcore::Thread::sleep(sleepTime_);
+
 		return;
 	}
 
@@ -93,12 +96,12 @@ void SyncTask::run(void)
 	HttpsClient client;
 	std::string json;
 
-	logger().debug("syncUri(%s)\n", syncUri_.c_str());
+	logger(logName_).debug("syncUri(%s)\n", syncUri_.c_str());
 
 	std::string resJson = client.httpPost(syncUri_, task.toJsonString(),
 			"application/json");
 
-	logger().info("user-api-center.maxthon.com response(%s)\n",
+	logger(logName_).info("user-api-center.maxthon.com response(%s)\n",
 			resJson.c_str());
 
 	// if success. del the task.
@@ -106,24 +109,24 @@ void SyncTask::run(void)
 	{
 		if (delTask(task.getQueueId()))
 		{
-			logger().info("Del succes\n");
+			logger(logName_).info("Del succes\n");
 		}
 		else
 		{
-			logger().info("Del failed \n");
+			logger(logName_).info("Del failed \n");
 		}
 	}
 	else
 	{
 
-		logger().error("center service response error\n");
+		logger(logName_).error("center service response error\n");
 	}
 
 }
 
 bool SyncTask::getOneTask(TaskBean& task)
 {
-	logger().trace(">>> SyncTask::getOneTask\n");
+	logger(logName_).trace(">>> SyncTask::getOneTask\n");
 	bool f = false;
 
 	try
@@ -152,11 +155,11 @@ bool SyncTask::getOneTask(TaskBean& task)
 
 	} catch (mxsql::SqlException & e)
 	{
-		logger().error("Mysql Error: code(%d), message(%s)\n", e.getErrorCode(),
-				e.getMessage().c_str());
+		logger(logName_).error("Mysql Error: code(%d), message(%s)\n",
+				e.getErrorCode(), e.getMessage().c_str());
 	}
 
-	logger().info("SyncTask::getOneTask success (%s)\n",
+	logger(logName_).info("SyncTask::getOneTask success (%s)\n",
 			task.toJsonString().c_str());
 
 	return f;
@@ -165,7 +168,7 @@ bool SyncTask::getOneTask(TaskBean& task)
 bool SyncTask::delTask(uint32_t queue_id)
 {
 
-	logger().trace(">>> SyncTask::delTask\n");
+	logger(logName_).trace(">>> SyncTask::delTask\n");
 
 	std::auto_ptr<mxsql::SqlConnection> connection(
 			datasource_->getConnection());
@@ -193,8 +196,10 @@ bool SyncTask::delTask(uint32_t queue_id)
 }
 
 mx_mul::MinQidTask::MinQidTask(mxsql::DataSource* datasource,
-		const std::string&uri, int sleepTime, int idcId) :
-		datasource_(datasource), uri_(uri), sleepTime_(sleepTime), idcId_(idcId)
+		const std::string&uri, int sleepTime, int idcId,
+		const std::string&logName) :
+		datasource_(datasource), uri_(uri), sleepTime_(sleepTime), idcId_(
+				idcId), logName_(logName)
 {
 }
 
@@ -212,36 +217,36 @@ std::string mx_mul::MinQidTask::getReqJson(uint32_t qid)
 	Json::FastWriter writer;
 	std::string res = writer.write(data);
 
-	logger().info("MinQidTask::getReqJson (%s)\n", res.c_str());
+	logger(logName_).info("MinQidTask::getReqJson (%s)\n", res.c_str());
 
 	return res;
 }
 void mx_mul::MinQidTask::run(void)
 {
-	mxcore::Thread::sleep(sleepTime_);
-	logger().trace(">>> MinQidTask::run\n");
+	logger(logName_).trace(">>> MinQidTask::run\n");
 
 	//get min id task in qu
 	uint32_t qid = getMinQidTask();
 
 	// send to center service.
 	HttpsClient client;
-	std::string resJson = client.httpPost(uri_, getReqJson(qid), "application/json");
+	std::string resJson = client.httpPost(uri_, getReqJson(qid),
+			"application/json");
 
 	if (responseOk(resJson))
 	{
-		logger().info("send succed\n");
+		logger(logName_).info("send succed\n");
 	}
 	else
 	{
-		logger().info("send failed\n");
+		logger(logName_).info("send failed\n");
 	}
-
+	mxcore::Thread::sleep(sleepTime_);
 }
 
 uint32_t mx_mul::MinQidTask::getMinQidTask()
 {
-	logger().trace(">>> MinQidTask::getMinQidTask\n");
+	logger(logName_).trace(">>> MinQidTask::getMinQidTask\n");
 
 	uint32_t qid;
 
@@ -263,13 +268,41 @@ uint32_t mx_mul::MinQidTask::getMinQidTask()
 		}
 	} catch (mxsql::SqlException & e)
 	{
-		logger().error("Mysql Error: code(%d), message(%s)\n", e.getErrorCode(),
-				e.getMessage().c_str());
+		logger(logName_).error("Mysql Error: code(%d), message(%s)\n",
+				e.getErrorCode(), e.getMessage().c_str());
 	}
 
-	logger().info("MinQidTask::getMinQidTask success qid(%d)\n", qid);
+	logger(logName_).info("MinQidTask::getMinQidTask success qid(%d)\n", qid);
 
 	return qid - 1;
 }
 
-/* namespace mx_user_api */
+bool mx_mul::MinQidTask::responseOk(const std::string & json)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
+
+		}
+	} catch (std::exception& e)
+	{
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
+	}
+
+	uint32_t code;
+	if (decode(jsonValue, "code", code))
+	{
+		return (200 == code || 409 == code);
+	}
+	else
+	{
+		return false;
+	}
+}
