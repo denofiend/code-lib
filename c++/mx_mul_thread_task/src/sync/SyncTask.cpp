@@ -150,6 +150,7 @@ bool SyncTask::getOneTask(TaskBean& task)
 			task.setType(rs->getUInt(3));
 			task.setUserId(rs->getUInt(4));
 			task.setIdcId(idc_id_);
+			task.setAppName(logName_);
 
 			f = true;
 		}

@@ -13,8 +13,9 @@ namespace mx_mul
 {
 
 TaskBean::TaskBean(const std::string&data, uint32_t user_id, uint32_t queue_id,
-		uint32_t type) :
-		data_(data), user_id_(user_id), queue_id_(queue_id), type_(type)
+		uint32_t type, const std::string& appName) :
+		data_(data), user_id_(user_id), queue_id_(queue_id), type_(type), appName_(
+				appName)
 {
 }
 
@@ -73,7 +74,8 @@ std::string TaskBean::toJsonString()
 		{
 			jsonData.removeMember("register_ip");
 		}
-		if (0 == this->type_)
+
+		if (0 == this->type_ && "user-api" == appName_)
 			jsonData["first_name"] = Json::Value::null;
 
 		jsonData.removeMember("register_ip");
@@ -141,6 +143,16 @@ void TaskBean::setData(std::string data_)
 void TaskBean::setIdcId(uint32_t idc_id_)
 {
 	this->idc_id_ = idc_id_;
+}
+
+std::string TaskBean::getAppName() const
+{
+	return appName_;
+}
+
+void TaskBean::setAppName(std::string appName_)
+{
+	this->appName_ = appName_;
 }
 
 } /* namespace mx_mul */

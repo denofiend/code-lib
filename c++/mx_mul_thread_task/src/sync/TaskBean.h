@@ -21,7 +21,7 @@ public:
 
 	TaskBean();
 	TaskBean(const std::string&data, uint32_t user_id, uint32_t queue_id,
-			uint32_t type);
+			uint32_t type, const std::string& appName);
 
 	virtual ~TaskBean();
 
@@ -39,6 +39,8 @@ public:
 	uint32_t getIdcId() const;
 	void setData(std::string data_);
 	void setIdcId(uint32_t idc_id_);
+	std::string getAppName() const;
+	void setAppName(std::string appName_);
 
 private:
 	std::string data_;
@@ -46,6 +48,7 @@ private:
 	uint32_t queue_id_;
 	uint32_t type_;
 	uint32_t idc_id_;
+	std::string appName_;
 };
 
 } /* namespace mx_mul */
