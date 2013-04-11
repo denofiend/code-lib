@@ -61,16 +61,12 @@ std::string TaskBean::toJsonString()
 		if (!reader.parse(this->data_, jsonData))
 		{
 			return "";
-			//E_ERROR_PROTOCOL(std::string("Invalid json format"));
 		}
-
-		logger().debug("data(%s)\n", this->data_.c_str());
 
 		if (!jsonData["register_ip"].isNull())
 		{
 			std::string register_ip = jsonData["register_ip"].asString();
 
-			//jsonData.removeMember("register_ip");
 			jsonData["ip"] = register_ip;
 		}
 		else
@@ -81,19 +77,17 @@ std::string TaskBean::toJsonString()
 			jsonData["first_name"] = Json::Value::null;
 
 		jsonData.removeMember("register_ip");
+
 		data["data"] = jsonData;
 
 	} catch (std::exception& e)
 	{
 		return "";
-		//E_ERROR_PROTOCOL(e.what());
 	}
 
 	Json::FastWriter writer;
 	return writer.write(data);
 }
-
-
 
 uint32_t TaskBean::getQueueId() const
 {
@@ -109,8 +103,6 @@ uint32_t TaskBean::getUserId() const
 {
 	return user_id_;
 }
-
-
 
 void TaskBean::setQueueId(uint32_t queue_id_)
 {

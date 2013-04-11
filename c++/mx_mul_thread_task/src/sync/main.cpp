@@ -83,13 +83,12 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 	{
 		if (!reader.parse(json, jsonValue))
 		{
-			//logger().error("Json parse error: json(%s)\n", json.c_str());
-
+			std::cout << "Json parse error: json(" << json << std::endl;
 		}
 	} catch (std::exception& e)
 	{
-//		logger().error("Json parse error: json(%s) error(%s)\n", json.c_str(),
-//				e.what());
+		std::cout << "Json parse error: error( " << e.what() << std::endl;
+
 	}
 
 	for (int i = 0; i < jsonValue.size(); ++i)

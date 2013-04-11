@@ -44,12 +44,13 @@ bool SyncTask::responseOk(const std::string & json)
 		{
 			logger(logName_).error("Json parse error: json(%s)\n",
 					json.c_str());
-
+			return false;
 		}
 	} catch (std::exception& e)
 	{
 		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
 				json.c_str(), e.what());
+		return false;
 	}
 
 	uint32_t code;
@@ -289,11 +290,16 @@ bool mx_mul::MinQidTask::responseOk(const std::string & json)
 			logger(logName_).error("Json parse error: json(%s)\n",
 					json.c_str());
 
+			return false;
+
 		}
+
 	} catch (std::exception& e)
 	{
 		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
 				json.c_str(), e.what());
+
+		return false;
 	}
 
 	uint32_t code;
