@@ -235,6 +235,9 @@ void mx_mul::MinQidTask::run(void)
 	std::string resJson = client.httpPost(uri_, getReqJson(qid),
 			"application/json");
 
+	logger(logName_).info(">>> MinQidTask center response(%s)\n",
+			resJson.c_str());
+
 	if (responseOk(resJson))
 	{
 		logger(logName_).info("send succed\n");
