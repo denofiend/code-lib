@@ -41,7 +41,12 @@ private:
 
 	bool delTask(uint32_t queue_id);
 
-	bool responseOk(const std::string & json);
+	int responseCode(const std::string & json);
+
+	void delOldRecordsAndQueueTask(const uint32_t & qid, const uint32_t &uid,
+			const uint32_t&id);
+
+	uint32_t getId(const std::string&json);
 
 };
 

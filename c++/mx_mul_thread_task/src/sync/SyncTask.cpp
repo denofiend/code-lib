@@ -33,7 +33,7 @@ static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 	return true;
 }
 
-bool SyncTask::responseOk(const std::string & json)
+int SyncTask::responseCode(const std::string & json)
 {
 	Json::Reader reader;
 	Json::Value jsonValue;
@@ -56,11 +56,11 @@ bool SyncTask::responseOk(const std::string & json)
 	uint32_t code;
 	if (decode(jsonValue, "code", code))
 	{
-		return (200 == code || 409 == code || 201 == code);
+		return code;
 	}
 	else
 	{
-		return false;
+		return -1;
 	}
 }
 
@@ -106,7 +106,13 @@ void SyncTask::run(void)
 			resJson.c_str());
 
 	// if success. del the task.
-	if (responseOk(resJson))
+	int code = responseCode(json);
+	if (200 == code)
+	{
+		delOldRecordsAndQueueTask(task.getQueueId(), task.getUserId(),
+				getId(task.getData()));
+	}
+	else if (409 == code || 201 == code)
 	{
 		if (delTask(task.getQueueId()))
 		{
@@ -193,6 +199,89 @@ bool SyncTask::delTask(uint32_t queue_id)
 	trans->commit();
 
 	return (0 != ret);
+}
+
+uint32_t SyncTask::getId(const std::string & json)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
+			return false;
+		}
+	} catch (std::exception& e)
+	{
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
+		return false;
+	}
+
+	uint32_t id;
+	if (decode(jsonValue, "id", id))
+	{
+		return id;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
+		const uint32_t &uid, const uint32_t&id)
+{
+	logger(logName_).trace(">>> SyncTask::delTask\n");
+
+	std::auto_ptr<mxsql::SqlConnection> connection(
+			datasource_->getConnection());
+
+	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
+	int ret = false;
+
+	// delete transaction_table
+	{
+		const std::string sql =
+				"delete from `roll_transaction` where `queue_id` = ?";
+
+		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+				connection->preparedStatement(sql));
+		stmt->setUInt(1, qid);
+
+		ret = stmt->executeUpdate();
+	}
+
+	{
+		const std::string sql =
+				"update `base_user_info` a, `base_user_info` b set a.`account` = ifnull(a.`account`, b.`account`), a.`email` = ifnull(a.`email`, b.`email`), a.`mobile` = ifnull(a.`mobile`, b.`mobile`), a.`country_code` = ifnull(a.`country_code`, b.`country_code`), a.`nickname`=ifnull(a.`nickname`, b.`nickname`) where a.`user_id` = ?  and b.`user_id` = ? and a.`id` = ? and b.`id` < a.`id` and b.`id` != ?;";
+
+		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+				connection->preparedStatement(sql));
+
+		stmt->setUInt(1, uid);
+		stmt->setUInt(2, uid);
+		stmt->setUInt(3, id);
+		stmt->setUInt(4, id);
+
+		ret = stmt->executeUpdate();
+	}
+
+	{
+		const std::string sql =
+				"delete from `base_user_info` where `user_id` = ? and `id` != ?";
+		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+				connection->preparedStatement(sql));
+		stmt->setUInt(1, uid);
+		stmt->setUInt(2, id);
+
+		ret = stmt->executeUpdate();
+	}
+
+	trans->commit();
 }
 
 }
