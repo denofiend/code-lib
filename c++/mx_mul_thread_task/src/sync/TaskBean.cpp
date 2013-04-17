@@ -80,6 +80,18 @@ std::string TaskBean::toJsonString()
 
 		jsonData.removeMember("register_ip");
 
+		if (!jsonData["avatar_url"].isNull())
+		{
+			std::string avatar_url = jsonData["avatar_url"].asString();
+
+			jsonData["avatarurl"] = avatar_url;
+		}
+		else
+		{
+			jsonData.removeMember("avatar_url");
+		}
+
+		jsonData.removeMember("avatar_url");
 		data["data"] = jsonData;
 
 	} catch (std::exception& e)
