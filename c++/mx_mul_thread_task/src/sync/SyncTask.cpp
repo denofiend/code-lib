@@ -237,51 +237,108 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 {
 	logger(logName_).trace(">>> SyncTask::delTask\n");
 
-	std::auto_ptr<mxsql::SqlConnection> connection(
-			datasource_->getConnection());
-
-	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
-	int ret = false;
-
-	// delete transaction_table
+	try
 	{
-		const std::string sql =
-				"delete from `roll_transaction` where `queue_id` = ?";
+		std::auto_ptr<mxsql::SqlConnection> connection(
+				datasource_->getConnection());
 
-		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
-				connection->preparedStatement(sql));
-		stmt->setUInt(1, qid);
+		std::auto_ptr<mxsql::SqlTransaction> trans(
+				connection->beginTransaction());
+		int ret = false;
 
-		ret = stmt->executeUpdate();
-	}
+		// delete transaction_table
+		{
+			const std::string sql =
+					"delete from `roll_transaction` where `queue_id` = ?";
 
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+			stmt->setUInt(1, qid);
+
+			ret = stmt->executeUpdate();
+		}
+
+		std::string account, email, mobile, country_code, nickname;
+
+		{
+			const std::string sql =
+					"select `account`, `email`, `mobile`, `country_cdoe`, `nickname` from `base_user_info"
+							"where `user_id` = ?  `id` < ? for update";
+
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+
+			stmt->setUInt(1, uid);
+			stmt->setUInt(2, id);
+
+			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
+
+			if (rs->next())
+			{
+				if (!rs->isNull(1))
+				{
+					account = rs->getString(1);
+				}
+				if (!rs->isNull(2))
+				{
+					email = rs->getString(2);
+				}
+				if (!rs->isNull(3))
+				{
+					mobile = rs->getString(3);
+				}
+				if (!rs->isNull(4))
+				{
+					country_code = rs->getString(4);
+				}
+				if (!rs->isNull(5))
+				{
+					nickname = rs->getString(5);
+				}
+			}
+		}
+
+		{
+			const std::string sql =
+					"delete from `base_user_info` where `user_id` = ? and `id` < ?";
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+			stmt->setUInt(1, uid);
+			stmt->setUInt(2, id);
+
+			ret = stmt->executeUpdate();
+		}
+
+		{
+			const std::string sql =
+					"update `base_user_info`  set `account` = ifnull(`account`, ?)"
+							", `email` = ifnull(`email`, ?`), "
+							"`mobile` = ifnull(`mobile`, ?), "
+							"`country_code` = ifnull(`country_code`, ?), "
+							"`nickname`=ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
+
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+
+			stmt->setString(1, account);
+			stmt->setString(2, email);
+			stmt->setString(3, mobile);
+			stmt->setString(4, country_code);
+			stmt->setString(5, nickname);
+
+			stmt->setUInt(6, uid);
+			stmt->setUInt(7, id);
+
+			ret = stmt->executeUpdate();
+		}
+
+		trans->commit();
+
+	} catch (mxsql::SqlException&e)
 	{
-		const std::string sql =
-				"update `base_user_info` a, `base_user_info` b set a.`account` = ifnull(a.`account`, b.`account`), a.`email` = ifnull(a.`email`, b.`email`), a.`mobile` = ifnull(a.`mobile`, b.`mobile`), a.`country_code` = ifnull(a.`country_code`, b.`country_code`), a.`nickname`=ifnull(a.`nickname`, b.`nickname`) where a.`user_id` = ?  and b.`user_id` = ? and a.`id` = ? and b.`id` < a.`id` and b.`id` != ?;";
-
-		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
-				connection->preparedStatement(sql));
-
-		stmt->setUInt(1, uid);
-		stmt->setUInt(2, uid);
-		stmt->setUInt(3, id);
-		stmt->setUInt(4, id);
-
-		ret = stmt->executeUpdate();
+		logger(logName_).error("mysql error: code(%d) message(%s)\n",
+				e.getErrorCode(), e.getMessage().c_str());
 	}
-
-	{
-		const std::string sql =
-				"delete from `base_user_info` where `user_id` = ? and `id` != ?";
-		std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
-				connection->preparedStatement(sql));
-		stmt->setUInt(1, uid);
-		stmt->setUInt(2, id);
-
-		ret = stmt->executeUpdate();
-	}
-
-	trans->commit();
 }
 
 }
