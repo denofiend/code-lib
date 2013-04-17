@@ -9,6 +9,7 @@
 #include "sync/HttpsClient.h"
 #include "sync/MyLogger.h"
 #include <mxcore/Thread.h>
+#include <mxcore/Number.h>
 
 namespace mx_mul
 {
@@ -106,13 +107,15 @@ void SyncTask::run(void)
 			resJson.c_str());
 
 	// if success. del the task.
-	int code = responseCode(json);
-	if (200 == code)
+	int code = responseCode(resJson);
+
+
+	if ((201 == code || 200 == code) && 1 == task.getType())
 	{
 		delOldRecordsAndQueueTask(task.getQueueId(), task.getUserId(),
 				getId(task.getData()));
 	}
-	else if (409 == code || 201 == code)
+	else if (200 == code || 409 == code || 201 == code)
 	{
 		if (delTask(task.getQueueId()))
 		{
@@ -228,7 +231,7 @@ uint32_t SyncTask::getId(const std::string & json)
 	}
 	else
 	{
-		return -1;
+		return 0;
 	}
 }
 
@@ -237,13 +240,13 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 {
 	logger(logName_).trace(">>> SyncTask::delTask\n");
 
+	std::auto_ptr<mxsql::SqlConnection> connection(
+			datasource_->getConnection());
+
+	std::auto_ptr<mxsql::SqlTransaction> trans(
+			connection->beginTransaction());
 	try
 	{
-		std::auto_ptr<mxsql::SqlConnection> connection(
-				datasource_->getConnection());
-
-		std::auto_ptr<mxsql::SqlTransaction> trans(
-				connection->beginTransaction());
 		int ret = false;
 
 		// delete transaction_table
@@ -262,8 +265,7 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 
 		{
 			const std::string sql =
-					"select `account`, `email`, `mobile`, `country_cdoe`, `nickname` from `base_user_info"
-							"where `user_id` = ?  `id` < ? for update";
+					"select `account`, `email`, `mobile`, `country_code`, `nickname`, `password` from `base_user_info` where `user_id` = ? and `id` < ? for update";
 
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
@@ -298,6 +300,8 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			}
 		}
 
+		logger(logName_).debug("after select account(%s) email(%s), mobile(%s), country_code(%s), nickname(%s)\n", account.c_str(), email.c_str(), mobile.c_str(), country_code.c_str(), nickname.c_str());
+
 		{
 			const std::string sql =
 					"delete from `base_user_info` where `user_id` = ? and `id` < ?";
@@ -311,20 +315,61 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 
 		{
 			const std::string sql =
-					"update `base_user_info`  set `account` = ifnull(`account`, ?)"
-							", `email` = ifnull(`email`, ?`), "
+					"update `base_user_info` set `account` = ifnull(`account`, ?), "
+							"`email` = ifnull(`email`, ?), "
 							"`mobile` = ifnull(`mobile`, ?), "
 							"`country_code` = ifnull(`country_code`, ?), "
-							"`nickname`=ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
+							"`nickname` = ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
+
+			logger(logName_).debug("mysql sql(%s)\n", sql.c_str());
 
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
 
-			stmt->setString(1, account);
-			stmt->setString(2, email);
-			stmt->setString(3, mobile);
-			stmt->setString(4, country_code);
-			stmt->setString(5, nickname);
+			if (account.empty())
+			{
+				stmt->setNull(1);
+			}
+			else
+			{
+				stmt->setString(1, account);
+			}
+
+			if (email.empty())
+			{
+				stmt->setNull(2);
+			}
+			else
+			{
+				stmt->setString(2, email);
+			}
+
+			if (mobile.empty())
+			{
+				stmt->setNull(3);
+			}
+			else
+			{
+				stmt->setString(3, mobile);
+			}
+
+			if (country_code.empty())
+			{
+				stmt->setNull(4);
+			}
+			else
+			{
+				stmt->setUInt(4, mxcore::UInteger::fromString(country_code));
+			}
+
+			if (nickname.empty())
+			{
+				stmt->setNull(5);
+			}
+			else
+			{
+				stmt->setString(5, nickname);
+			}
 
 			stmt->setUInt(6, uid);
 			stmt->setUInt(7, id);
@@ -336,6 +381,7 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 
 	} catch (mxsql::SqlException&e)
 	{
+		trans->rollback();
 		logger(logName_).error("mysql error: code(%d) message(%s)\n",
 				e.getErrorCode(), e.getMessage().c_str());
 	}

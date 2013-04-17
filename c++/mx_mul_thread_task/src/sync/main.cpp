@@ -74,7 +74,7 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 	json.assign((std::istreambuf_iterator<char>(in)),
 	std::istreambuf_iterator<char>());
 
-	std::cout << "json (" << json << std::endl;
+	//std::cout << "json (" << json << std::endl;
 
 	Json::Reader reader;
 	Json::Value jsonValue;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 	mx_mul::TaskQueuePtr taskQueue(new mx_mul::TaskQueue());
 	list<mx_mul::TaskThreadPtr> threads;
 
-	for (int i = 0; i < configs.size(); ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		mx_mul::TaskThreadPtr t(new mx_mul::TaskThread(taskQueue));
 		threads.push_back(t);
