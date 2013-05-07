@@ -109,8 +109,9 @@ void SyncTask::run(void)
 	// if success. del the task.
 	int code = responseCode(resJson);
 
+	logger(logName_).debug("user-api-center.maxthon.com type(%d), app(%s)\n", task.getType(), logName_.c_str());
 
-	if ((201 == code || 200 == code) && 1 == task.getType())
+	if ((201 == code || 200 == code) && 1 == task.getType() && "user_api" == logName_)
 	{
 		delOldRecordsAndQueueTask(task.getQueueId(), task.getUserId(),
 				getId(task.getData()));
@@ -262,10 +263,11 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 		}
 
 		std::string account, email, mobile, country_code, nickname;
+		unsigned long long int id_a = 0, id_e = 0, id_m = 0, id_c = 0, id_n = 0;
 
 		{
 			const std::string sql =
-					"select `account`, `email`, `mobile`, `country_code`, `nickname`, `password` from `base_user_info` where `user_id` = ? and `id` < ? for update";
+					"select `account`, `email`, `mobile`, `country_code`, `nickname`, `id` from `base_user_info` where `user_id` = ? and `id` < ? for update";
 
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
@@ -275,27 +277,54 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 
 			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
 
-			if (rs->next())
+			while (rs->next())
 			{
+				unsigned long long id_now = rs->getULong(6);
 				if (!rs->isNull(1))
 				{
-					account = rs->getString(1);
+					std::string account_temp = rs->getString(1);
+					if (id_a < id_now)
+					{
+						id_a = id_now;
+						account = account_temp;
+					}
+					
 				}
 				if (!rs->isNull(2))
 				{
-					email = rs->getString(2);
+					std::string email_temp = rs->getString(2);
+					if (id_e < id_now)
+					{
+						id_e = id_now;
+						email = email_temp;
+					}
 				}
 				if (!rs->isNull(3))
 				{
-					mobile = rs->getString(3);
+					std::string mobile_temp = rs->getString(3);
+					if (id_m < id_now)
+					{
+						id_m = id_now;
+						mobile = mobile_temp;
+					}
 				}
 				if (!rs->isNull(4))
 				{
-					country_code = rs->getString(4);
+					std::string country_code_temp = rs->getString(4);
+					if (id_c < id_now)
+					{
+						id_c = id_now;
+						country_code = country_code_temp;
+					}
 				}
 				if (!rs->isNull(5))
 				{
-					nickname = rs->getString(5);
+					std::string nickname_temp = rs->getString(5);
+					if (id_n < id_now)
+					{
+						id_n = id_now;
+						nickname = nickname_temp;
+					}
 				}
 			}
 		}
