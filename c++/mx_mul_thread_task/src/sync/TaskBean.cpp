@@ -75,7 +75,7 @@ std::string TaskBean::toJsonString()
 			jsonData.removeMember("register_ip");
 		}
 
-		if (0 == this->type_ && "user-api" == appName_)
+		if (0 == this->type_ && "user_api" == appName_)
 			jsonData["first_name"] = Json::Value::null;
 
 		jsonData.removeMember("register_ip");
