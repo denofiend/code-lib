@@ -46,6 +46,8 @@ struct Config
 	int minIdSleepTime_;
 	int idcId_;
 
+	mxsql::DataSource* dataSource;
+
 };
 
 static bool getHomeDir(char* argv[], std::string& homeDir)
@@ -159,6 +161,19 @@ int main(int argc, char* argv[])
 
 	mxos::daemonInit(argv[0], "", 0);
 
+	mxsql::MysqlConnectionFactory factory;
+
+	for (vector<Config>::const_iterator it = configs.begin();
+			it != configs.end(); ++it)
+	{
+		Config conf = *it;
+
+		conf.dataSource = new mxsql::ThreadedDataSource(
+				conf.dsConfig, &factory);
+
+		mxcore::LoggerFactory::getInstance().createLogger(conf.logConfig_);
+
+	}
 	mx_mul::TaskQueuePtr taskQueue(new mx_mul::TaskQueue());
 	list<mx_mul::TaskThreadPtr> threads;
 
@@ -169,32 +184,25 @@ int main(int argc, char* argv[])
 		t->start();
 	}
 
-	mxsql::MysqlConnectionFactory factory;
-
 	while (1)
 	{
 
 		for (vector<Config>::const_iterator it = configs.begin();
 				it != configs.end(); ++it)
-				{
+		{
 			Config conf = *it;
 
-			mxsql::DataSource* dataSource = new mxsql::ThreadedDataSource(
-					conf.dsConfig, &factory);
-
-			mxcore::LoggerFactory::getInstance().createLogger(conf.logConfig_);
-
 			mx_mul::SyncTaskPtr task(
-					new mx_mul::SyncTask(dataSource, conf.syncUri_,
-							conf.syncSleepTime_, conf.idcId_,
-							conf.logConfig_.name_));
+					new mx_mul::SyncTask(conf.dataSource, conf.syncUri_,
+						conf.syncSleepTime_, conf.idcId_,
+						conf.logConfig_.name_));
 
 			taskQueue->push(task);
 
 			mx_mul::MinQidTaskPtr minQidTask(
-					new mx_mul::MinQidTask(dataSource, conf.minIdUri_,
-							conf.minIdSleepTime_, conf.idcId_,
-							conf.logConfig_.name_));
+					new mx_mul::MinQidTask(conf.dataSource, conf.minIdUri_,
+						conf.minIdSleepTime_, conf.idcId_,
+						conf.logConfig_.name_));
 
 			taskQueue->push(minQidTask);
 		}
@@ -211,7 +219,7 @@ int main(int argc, char* argv[])
 	//
 	for (list<mx_mul::TaskThreadPtr>::iterator it = threads.begin();
 			it != threads.end(); ++it)
-			{
+	{
 
 		it->get()->join();
 	}
