@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 	mx_mul::TaskQueuePtr taskQueue(new mx_mul::TaskQueue());
 	list<mx_mul::TaskThreadPtr> threads;
 
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < (int)configs.size() * 2; ++i)
 	{
 		mx_mul::TaskThreadPtr t(new mx_mul::TaskThread(taskQueue));
 		threads.push_back(t);
