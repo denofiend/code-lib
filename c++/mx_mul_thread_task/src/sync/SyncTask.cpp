@@ -34,6 +34,26 @@ static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 	return true;
 }
 
+static bool decode(const Json::Value& value, const char* key, std::string& dst)
+{
+	if (value[key].isNull() || !value.isObject())
+	{
+		//E_JSON_DECODE(std::string("Invalid ") + key + " Parent");
+		return false;
+	}
+
+	const Json::Value& subValue = value[key];
+
+	if (subValue.isNull() || !subValue.isConvertibleTo(Json::stringValue))
+	{
+		//E_JSON_DECODE(std::string("Invalid ") + key);
+		return false;
+	}
+
+	dst = subValue.asString();
+	return true;
+}
+
 int SyncTask::responseCode(const std::string & json)
 {
 	Json::Reader reader;
@@ -109,12 +129,18 @@ void SyncTask::run(void)
 	// if success. del the task.
 	int code = responseCode(resJson);
 
-	logger(logName_).debug("user-api-center.maxthon.com type(%d), app(%s)\n", task.getType(), logName_.c_str());
+	logger(logName_).debug("user-api-center.maxthon.com type(%d), app(%s)\n",
+			task.getType(), logName_.c_str());
 
-	if ((201 == code || 200 == code) && 1 == task.getType() && "user_api" == logName_)
+	if ((201 == code || 200 == code) && 1 == task.getType()
+			&& "user_api" == logName_)
 	{
 		delOldRecordsAndQueueTask(task.getQueueId(), task.getUserId(),
 				getId(task.getData()));
+	}
+	else if (409 == code && 0 == task.getType() && isNickNameDuplicate(resJson))
+	{
+		modifyTaskNickname(task);
 	}
 	else if (200 == code || 409 == code || 201 == code)
 	{
@@ -205,11 +231,10 @@ bool SyncTask::delTask(uint32_t queue_id)
 	return (0 != ret);
 }
 
-uint32_t SyncTask::getId(const std::string & json)
+bool SyncTask::isNickNameDuplicate(const std::string & json)
 {
 	Json::Reader reader;
 	Json::Value jsonValue;
-
 	try
 	{
 		if (!reader.parse(json, jsonValue))
@@ -218,13 +243,39 @@ uint32_t SyncTask::getId(const std::string & json)
 					json.c_str());
 			return false;
 		}
-	} catch (std::exception& e)
+	} catch (std::exception & e)
 	{
 		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
 				json.c_str(), e.what());
 		return false;
 	}
+	std::string message;
+	if (!decode(jsonValue, "message", message))
+	{
+		logger(logName_).error("Json parse message error\n");
+	}
 
+	return message.find("for key 'nickname'") != std::string::npos;
+}
+
+uint32_t SyncTask::getId(const std::string & json)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
+			return false;
+		}
+	} catch (std::exception & e)
+	{
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
+		return false;
+	}
 	uint32_t id;
 	if (decode(jsonValue, "id", id))
 	{
@@ -236,47 +287,127 @@ uint32_t SyncTask::getId(const std::string & json)
 	}
 }
 
-void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
-		const uint32_t &uid, const uint32_t&id)
+std::string SyncTask::resetData(const std::string & json,
+		const std::string & newNickname)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
+			return false;
+		}
+	} catch (std::exception & e)
+	{
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
+		return false;
+	}
+
+	jsonValue.removeMember("nickname");
+	jsonValue["nickname"] = newNickname;
+
+	Json::FastWriter writer;
+
+	return writer.write(jsonValue);
+}
+
+void SyncTask::modifyTaskNickname(TaskBean & bean)
 {
 	logger(logName_).trace(">>> SyncTask::delTask\n");
 
 	std::auto_ptr<mxsql::SqlConnection> connection(
 			datasource_->getConnection());
+	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
+	try
+	{
+		std::string newNickname;
+		{
+			const std::string sql =
+					"select `nickname` from `base_user_info` where `user_id` = ? order by `id` desc limit 1";
 
-	std::auto_ptr<mxsql::SqlTransaction> trans(
-			connection->beginTransaction());
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+			stmt->setUInt(1, bean.getUserId());
+			stmt->setUInt(2, getId(bean.getData()));
+
+			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
+
+			if (rs->next())
+			{
+				if (!rs->isNull(1))
+				{
+					newNickname = rs->getString(1);
+				}
+				else
+				{
+					logger(logName_).error("system error, not get nickname\n");
+					trans->commit();
+					return;
+				}
+			}
+
+		}
+
+		logger(logName_).debug("after select user_id(%u), newNickname(%s)\n",
+				bean.getUserId(), newNickname.c_str());
+
+		{
+			const std::string sql =
+					"update `roll_transaction` set `json`=? where `queue_id` = ?";
+
+			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
+					connection->preparedStatement(sql));
+
+			stmt->setString(1, resetData(bean.getData(), newNickname));
+			stmt->setUInt(2, bean.getQueueId());
+
+			stmt->executeUpdate();
+		}
+
+		trans->commit();
+
+	} catch (mxsql::SqlException&e)
+	{
+		trans->rollback();
+		logger(logName_).error("mysql error: code(%d) message(%s)\n",
+				e.getErrorCode(), e.getMessage().c_str());
+	}
+}
+
+void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
+		const uint32_t & uid, const uint32_t & id)
+{
+	logger(logName_).trace(">>> SyncTask::delTask\n");
+
+	std::auto_ptr<mxsql::SqlConnection> connection(
+			datasource_->getConnection());
+	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
 	try
 	{
 		int ret = false;
-
 		// delete transaction_table
 		{
 			const std::string sql =
 					"delete from `roll_transaction` where `queue_id` = ?";
-
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
 			stmt->setUInt(1, qid);
-
 			ret = stmt->executeUpdate();
 		}
-
 		std::string account, email, mobile, country_code, nickname;
 		unsigned long long int id_a = 0, id_e = 0, id_m = 0, id_c = 0, id_n = 0;
-
 		{
 			const std::string sql =
 					"select `account`, `email`, `mobile`, `country_code`, `nickname`, `id` from `base_user_info` where `user_id` = ? and `id` < ? for update";
-
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
-
 			stmt->setUInt(1, uid);
 			stmt->setUInt(2, id);
-
 			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
-
 			while (rs->next())
 			{
 				unsigned long long id_now = rs->getULong(6);
@@ -288,8 +419,8 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 						id_a = id_now;
 						account = account_temp;
 					}
-					
 				}
+
 				if (!rs->isNull(2))
 				{
 					std::string email_temp = rs->getString(2);
@@ -299,6 +430,7 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 						email = email_temp;
 					}
 				}
+
 				if (!rs->isNull(3))
 				{
 					std::string mobile_temp = rs->getString(3);
@@ -308,6 +440,7 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 						mobile = mobile_temp;
 					}
 				}
+
 				if (!rs->isNull(4))
 				{
 					std::string country_code_temp = rs->getString(4);
@@ -317,6 +450,7 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 						country_code = country_code_temp;
 					}
 				}
+
 				if (!rs->isNull(5))
 				{
 					std::string nickname_temp = rs->getString(5);
@@ -326,11 +460,14 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 						nickname = nickname_temp;
 					}
 				}
+
 			}
+
 		}
-
-		logger(logName_).debug("after select account(%s) email(%s), mobile(%s), country_code(%s), nickname(%s)\n", account.c_str(), email.c_str(), mobile.c_str(), country_code.c_str(), nickname.c_str());
-
+		logger(logName_).debug(
+				"after select account(%s) email(%s), mobile(%s), country_code(%s), nickname(%s)\n",
+				account.c_str(), email.c_str(), mobile.c_str(),
+				country_code.c_str(), nickname.c_str());
 		{
 			const std::string sql =
 					"delete from `base_user_info` where `user_id` = ? and `id` < ?";
@@ -338,17 +475,11 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 					connection->preparedStatement(sql));
 			stmt->setUInt(1, uid);
 			stmt->setUInt(2, id);
-
 			ret = stmt->executeUpdate();
 		}
-
 		{
 			const std::string sql =
-					"update `base_user_info` set `account` = ifnull(`account`, ?), "
-							"`email` = ifnull(`email`, ?), "
-							"`mobile` = ifnull(`mobile`, ?), "
-							"`country_code` = ifnull(`country_code`, ?), "
-							"`nickname` = ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
+					"update `base_user_info` set `account` = ifnull(`account`, ?), `email` = ifnull(`email`, ?), `mobile` = ifnull(`mobile`, ?), `country_code` = ifnull(`country_code`, ?), `nickname` = ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
 
 			logger(logName_).debug("mysql sql(%s)\n", sql.c_str());
 

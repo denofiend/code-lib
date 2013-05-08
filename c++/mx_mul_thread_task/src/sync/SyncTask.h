@@ -39,12 +39,19 @@ private:
 private:
 	bool getOneTask(TaskBean &task);
 
+	bool isNickNameDuplicate(const std::string&resJson);
+
 	bool delTask(uint32_t queue_id);
 
 	int responseCode(const std::string & json);
 
 	void delOldRecordsAndQueueTask(const uint32_t & qid, const uint32_t &uid,
 			const uint32_t&id);
+
+	void modifyTaskNickname(TaskBean&bean);
+
+	std::string resetData(const std::string &json,
+			const std::string&newNickname);
 
 	uint32_t getId(const std::string&json);
 
