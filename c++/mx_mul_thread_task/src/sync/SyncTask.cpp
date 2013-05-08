@@ -255,7 +255,9 @@ bool SyncTask::isNickNameDuplicate(const std::string & json)
 		logger(logName_).error("Json parse message error\n");
 	}
 
-	return message.find("for key 'nickname'") != std::string::npos;
+	logger(logName_).debug("message(%s)\n", message.c_str());
+
+	return std::string::npos != message.find("Duplicate entry") and std::string::npos != message.find("nickname");
 }
 
 uint32_t SyncTask::getId(const std::string & json)
@@ -317,7 +319,7 @@ std::string SyncTask::resetData(const std::string & json,
 
 void SyncTask::modifyTaskNickname(TaskBean & bean)
 {
-	logger(logName_).trace(">>> SyncTask::delTask\n");
+	logger(logName_).trace(">>> SyncTask::modifyTaskNickName(%s)\n", bean.toJsonString().c_str());
 
 	std::auto_ptr<mxsql::SqlConnection> connection(
 			datasource_->getConnection());
@@ -332,7 +334,7 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
 			stmt->setUInt(1, bean.getUserId());
-			stmt->setUInt(2, getId(bean.getData()));
+			//stmt->setUInt(2, getId(bean.getData()));
 
 			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
 
