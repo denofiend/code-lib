@@ -257,7 +257,7 @@ bool SyncTask::isNickNameDuplicate(const std::string & json)
 
 	logger(logName_).debug("message(%s)\n", message.c_str());
 
-	return std::string::npos != message.find("Duplicate entry") and std::string::npos != message.find("nickname");
+	return std::string::npos != message.find("Duplicate entry") and std::string::npos != message.find("for key 'nickname'");
 }
 
 uint32_t SyncTask::getId(const std::string & json)
