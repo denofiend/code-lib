@@ -401,13 +401,28 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 
 			std::string responseBody = client.httpPost(
 					"http://user-api.user.maxthon.cn/v1/modify/users/"
-							+ mxcore::UInteger(bean.getUserId()).toString(),
+							+ mxcore::UInteger(bean.getUserId()).toString() + "?from=mx_sync",
 					toModifyApiRequestJsonBody(MxUtil::getRandomString()),
 					"application/json");
 
 			logger(logName_).info(
 					"register nickname(%s) duplicate, response body of  user_api 's update api. body(%s)\n",
 					nickname.c_str(), responseBody.c_str());
+
+
+			if (104 == responseCode(responseBody))
+			{
+				logger(logName_).info("del task\n");
+				if (delTask(bean.getQueueId()))
+				{
+					logger(logName_).info("Del succes\n");
+				}
+				else
+				{
+					logger(logName_).info("Del failed \n");
+				}
+
+			}
 		}
 
 		{
