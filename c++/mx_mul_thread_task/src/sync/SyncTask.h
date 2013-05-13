@@ -55,6 +55,9 @@ private:
 
 	uint32_t getId(const std::string&json);
 
+	std::string getNickname(const std::string&json);
+
+	std::string toModifyApiRequestJsonBody(const std::string&nickname);
 };
 
 class MinQidTask: public mxcore::Runnable

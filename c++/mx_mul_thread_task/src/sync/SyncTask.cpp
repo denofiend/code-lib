@@ -8,6 +8,7 @@
 #include "sync/SyncTask.h"
 #include "sync/HttpsClient.h"
 #include "sync/MyLogger.h"
+#include "sync/Util.h"
 #include <mxcore/Thread.h>
 #include <mxcore/Number.h>
 
@@ -257,7 +258,8 @@ bool SyncTask::isNickNameDuplicate(const std::string & json)
 
 	logger(logName_).debug("message(%s)\n", message.c_str());
 
-	return std::string::npos != message.find("Duplicate entry") and std::string::npos != message.find("for key 'nickname'");
+	return std::string::npos != message.find("Duplicate entry")
+			&& std::string::npos != message.find("for key 'nickname'");
 }
 
 uint32_t SyncTask::getId(const std::string & json)
@@ -289,6 +291,34 @@ uint32_t SyncTask::getId(const std::string & json)
 	}
 }
 
+std::string SyncTask::getNickname(const std::string & json)
+{
+	Json::Reader reader;
+	Json::Value jsonValue;
+	try
+	{
+		if (!reader.parse(json, jsonValue))
+		{
+			logger(logName_).error("Json parse error: json(%s)\n",
+					json.c_str());
+			return false;
+		}
+	} catch (std::exception & e)
+	{
+		logger(logName_).error("Json parse error: json(%s) error(%s)\n",
+				json.c_str(), e.what());
+		return false;
+	}
+	std::string nickname;
+	if (decode(jsonValue, "nickname", nickname))
+	{
+		return nickname;
+	}
+	else
+	{
+		return "";
+	}
+}
 std::string SyncTask::resetData(const std::string & json,
 		const std::string & newNickname)
 {
@@ -308,19 +338,25 @@ std::string SyncTask::resetData(const std::string & json,
 				json.c_str(), e.what());
 		return false;
 	}
-
 	jsonValue.removeMember("nickname");
 	jsonValue["nickname"] = newNickname;
+	Json::FastWriter writer;
+	return writer.write(jsonValue);
+}
+
+std::string SyncTask::toModifyApiRequestJsonBody(const std::string & nickname)
+{
+	Json::Value root;
+	root["nickname"] = nickname;
 
 	Json::FastWriter writer;
-
-	return writer.write(jsonValue);
+	return writer.write(root);
 }
 
 void SyncTask::modifyTaskNickname(TaskBean & bean)
 {
-	logger(logName_).trace(">>> SyncTask::modifyTaskNickName(%s)\n", bean.toJsonString().c_str());
-
+	logger(logName_).trace(">>> SyncTask::modifyTaskNickName(%s)\n",
+			bean.toJsonString().c_str());
 	std::auto_ptr<mxsql::SqlConnection> connection(
 			datasource_->getConnection());
 	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
@@ -330,14 +366,11 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 		{
 			const std::string sql =
 					"select `nickname` from `base_user_info` where `user_id` = ? order by `id` desc limit 1";
-
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
 			stmt->setUInt(1, bean.getUserId());
 			//stmt->setUInt(2, getId(bean.getData()));
-
 			std::auto_ptr<mxsql::SqlResultSet> rs(stmt->executeQuery());
-
 			if (rs->next())
 			{
 				if (!rs->isNull(1))
@@ -353,26 +386,41 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 			}
 
 		}
-
 		logger(logName_).debug("after select user_id(%u), newNickname(%s)\n",
 				bean.getUserId(), newNickname.c_str());
+
+		std::string nickname = getNickname(bean.getData());
+
+		if (nickname == newNickname)
+		{
+
+			logger(logName_).debug("nickname(%s), newNickname(%s)\n",
+					nickname.c_str(), newNickname.c_str());
+
+			HttpsClient client;
+
+			std::string responseBody = client.httpPost(
+					"http://user-api.user.maxthon.cn/v1/modify/users/"
+							+ mxcore::UInteger(bean.getUserId()).toString(),
+					toModifyApiRequestJsonBody(MxUtil::getRandomString()),
+					"application/json");
+
+			logger(logName_).info(
+					"register nickname(%s) duplicate, response body of  user_api 's update api. body(%s)\n",
+					nickname.c_str(), responseBody.c_str());
+		}
 
 		{
 			const std::string sql =
 					"update `roll_transaction` set `json`=? where `queue_id` = ?";
-
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
-
 			stmt->setString(1, resetData(bean.getData(), newNickname));
 			stmt->setUInt(2, bean.getQueueId());
-
 			stmt->executeUpdate();
 		}
-
 		trans->commit();
-
-	} catch (mxsql::SqlException&e)
+	} catch (mxsql::SqlException & e)
 	{
 		trans->rollback();
 		logger(logName_).error("mysql error: code(%d) message(%s)\n",
@@ -384,7 +432,6 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 		const uint32_t & uid, const uint32_t & id)
 {
 	logger(logName_).trace(">>> SyncTask::delTask\n");
-
 	std::auto_ptr<mxsql::SqlConnection> connection(
 			datasource_->getConnection());
 	std::auto_ptr<mxsql::SqlTransaction> trans(connection->beginTransaction());
@@ -482,12 +529,9 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 		{
 			const std::string sql =
 					"update `base_user_info` set `account` = ifnull(`account`, ?), `email` = ifnull(`email`, ?), `mobile` = ifnull(`mobile`, ?), `country_code` = ifnull(`country_code`, ?), `nickname` = ifnull(`nickname`, ?) where `user_id` = ?  and `id` = ?;";
-
 			logger(logName_).debug("mysql sql(%s)\n", sql.c_str());
-
 			std::auto_ptr<mxsql::SqlPreparedStatement> stmt(
 					connection->preparedStatement(sql));
-
 			if (account.empty())
 			{
 				stmt->setNull(1);
@@ -496,7 +540,6 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			{
 				stmt->setString(1, account);
 			}
-
 			if (email.empty())
 			{
 				stmt->setNull(2);
@@ -505,7 +548,6 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			{
 				stmt->setString(2, email);
 			}
-
 			if (mobile.empty())
 			{
 				stmt->setNull(3);
@@ -514,7 +556,6 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			{
 				stmt->setString(3, mobile);
 			}
-
 			if (country_code.empty())
 			{
 				stmt->setNull(4);
@@ -523,7 +564,6 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			{
 				stmt->setUInt(4, mxcore::UInteger::fromString(country_code));
 			}
-
 			if (nickname.empty())
 			{
 				stmt->setNull(5);
@@ -532,16 +572,12 @@ void SyncTask::delOldRecordsAndQueueTask(const uint32_t & qid,
 			{
 				stmt->setString(5, nickname);
 			}
-
 			stmt->setUInt(6, uid);
 			stmt->setUInt(7, id);
-
 			ret = stmt->executeUpdate();
 		}
-
 		trans->commit();
-
-	} catch (mxsql::SqlException&e)
+	} catch (mxsql::SqlException & e)
 	{
 		trans->rollback();
 		logger(logName_).error("mysql error: code(%d) message(%s)\n",

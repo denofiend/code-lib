@@ -11,7 +11,7 @@
 namespace MxUtil
 {
 
-bool decode(const Json::Value& value, const char* key, std::string& dst)
+static bool decode(const Json::Value& value, const char* key, std::string& dst)
 {
 	if (value[key].isNull() || !value.isObject())
 	{
@@ -29,7 +29,7 @@ bool decode(const Json::Value& value, const char* key, std::string& dst)
 	return true;
 }
 
-bool decode(const Json::Value& value, const char* key, uint32_t& dst)
+static bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 {
 	if (value[key].isNull() || !value.isObject())
 	{
@@ -47,7 +47,7 @@ bool decode(const Json::Value& value, const char* key, uint32_t& dst)
 	return true;
 }
 
-bool decode(const Json::Value& value, const char* key, uint16_t& dst)
+static bool decode(const Json::Value& value, const char* key, uint16_t& dst)
 {
 	if (value[key].isNull() || !value.isObject())
 	{
@@ -65,7 +65,7 @@ bool decode(const Json::Value& value, const char* key, uint16_t& dst)
 	return true;
 }
 
-bool decode(const Json::Value& value, const char* key, int& dst)
+static bool decode(const Json::Value& value, const char* key, int& dst)
 {
 	if (value[key].isNull() || !value.isObject())
 	{
@@ -83,9 +83,7 @@ bool decode(const Json::Value& value, const char* key, int& dst)
 	return true;
 }
 
-
-
-bool decode(const Json::Value& value, const char* key, uint64_t& dst)
+static bool decode(const Json::Value& value, const char* key, uint64_t& dst)
 {
 	if (value.isNull() || !value.isObject())
 	{
@@ -103,7 +101,7 @@ bool decode(const Json::Value& value, const char* key, uint64_t& dst)
 	return true;
 }
 
-bool decodeDefault(const Json::Value& value, const char* key, std::string& dst,
+static bool decodeDefault(const Json::Value& value, const char* key, std::string& dst,
 		const std::string& defValue)
 {
 	if (value.isNull() || !value.isObject())
@@ -126,7 +124,7 @@ bool decodeDefault(const Json::Value& value, const char* key, std::string& dst,
 	dst = subValue.asString();
 	return true;
 }
-bool decodeNull(const Json::Value & value, const char *key, std::string & dst)
+static bool decodeNull(const Json::Value & value, const char *key, std::string & dst)
 {
 	if (!value.isObject())
 	{
@@ -144,7 +142,7 @@ bool decodeNull(const Json::Value & value, const char *key, std::string & dst)
 	return true;
 }
 
-bool decodeNull(const Json::Value & value, const char *key, uint32_t & dst)
+static bool decodeNull(const Json::Value & value, const char *key, uint32_t & dst)
 {
 	if (!value.isObject())
 	{
@@ -162,7 +160,7 @@ bool decodeNull(const Json::Value & value, const char *key, uint32_t & dst)
 	return true;
 }
 
-bool decodeDefault(const Json::Value& value, const char* key, uint32_t& dst,
+static bool decodeDefault(const Json::Value& value, const char* key, uint32_t& dst,
 		uint32_t defValue)
 {
 	if (value.isNull() || !value.isObject())
@@ -186,7 +184,7 @@ bool decodeDefault(const Json::Value& value, const char* key, uint32_t& dst,
 	return true;
 }
 
-bool decodeDefault(const Json::Value& value, const char* key, uint64_t& dst,
+static bool decodeDefault(const Json::Value& value, const char* key, uint64_t& dst,
 		uint64_t defValue)
 {
 	if (value.isNull() || !value.isObject())
@@ -209,5 +207,23 @@ bool decodeDefault(const Json::Value& value, const char* key, uint64_t& dst,
 	dst = subValue.asUInt();
 	return true;
 }
+static const char CCH[] =
+		"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+static std::string getRandomString()
+{
+	int sz = 0;
+	while (0 == sz)
+		sz = rand() / (RAND_MAX / (sizeof(CCH)));
+
+	std::string nickname;
+	for (int i = 0; i < sz; ++i)
+	{
+		int x = rand() / (RAND_MAX / (sizeof(CCH) - 1));
+		nickname.push_back(CCH[x]);
+	}
+	return nickname + ".mx";
+}
+
 }
 #endif /* UTIL_H_ */
