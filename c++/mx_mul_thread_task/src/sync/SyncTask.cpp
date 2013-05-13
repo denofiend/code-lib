@@ -86,9 +86,9 @@ int SyncTask::responseCode(const std::string & json)
 	}
 }
 
-SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri,
+SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri, const std::string&modifyUri,
 		int sleepTime, uint32_t idc_id, const std::string&logName) :
-		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime), idc_id_(
+		datasource_(datasource), syncUri_(syncUri), modifyUri_(modifyUri), sleepTime_(sleepTime), idc_id_(
 				idc_id), logName_(logName)
 {
 
@@ -400,8 +400,7 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 			HttpsClient client;
 
 			std::string responseBody = client.httpPost(
-					"http://user-api.user.maxthon.cn/v1/modify/users/"
-							+ mxcore::UInteger(bean.getUserId()).toString() + "?from=mx_sync",
+					modifyUri_ + mxcore::UInteger(bean.getUserId()).toString() + "?from=mx_sync",
 					toModifyApiRequestJsonBody(MxUtil::getRandomString()),
 					"application/json");
 

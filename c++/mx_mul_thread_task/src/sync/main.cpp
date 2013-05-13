@@ -38,6 +38,7 @@ struct Config
 	mxsql::DataSource::Config dsConfig;
 
 	std::string syncUri_;
+	std::string modifyUri_;
 
 	mxcore::LoggerFactory::LoggerConfig logConfig_;
 
@@ -130,6 +131,7 @@ void parserJsonFromFile(vector<Config>&configs, const std::string&fileName)
 		MxUtil::decode(sync, "filepath_", config.logConfig_.filepath_);
 
 		MxUtil::decode(sync, "syncUri_", config.syncUri_);
+		MxUtil::decode(sync, "modifyUri_", config.modifyUri_);
 		MxUtil::decode(sync, "syncSleepTime_", config.syncSleepTime_);
 
 		MxUtil::decode(sync, "minIdUri_", config.minIdUri_);
@@ -190,7 +192,7 @@ int main(int argc, char* argv[])
 		{
 
 			mx_mul::SyncTaskPtr task(
-					new mx_mul::SyncTask((it->dataSource).get(), it->syncUri_,
+					new mx_mul::SyncTask((it->dataSource).get(), it->syncUri_, it->modifyUri_,
 						it->syncSleepTime_, it->idcId_,
 						it->logConfig_.name_));
 

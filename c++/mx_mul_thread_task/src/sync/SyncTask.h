@@ -21,7 +21,7 @@ class SyncTask: public mxcore::Runnable
 
 public:
 
-	SyncTask(mxsql::DataSource* datasource, const std::string&syncUri,
+	SyncTask(mxsql::DataSource* datasource, const std::string&syncUri, const std::string&modifyUri,
 			int sleepTime, uint32_t idc_id, const std::string&logName);
 
 	virtual ~SyncTask();
@@ -32,6 +32,7 @@ private:
 
 	mxsql::DataSource* datasource_;
 	std::string syncUri_;
+	std::string modifyUri_;
 	int sleepTime_;
 	uint32_t idc_id_;
 	std::string logName_;
