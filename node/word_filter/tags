@@ -1,0 +1,49 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.6	//
+CorrectReqData	test.py	/^class CorrectReqData:$/;"	c	inherits:
+CorrectReqData.__init__	test.py	/^    def __init__(self,version,web,rs_url,rs_hash,rs_size,errcode):$/;"	m	class:CorrectReqData	access:public
+InsertReqData	test.py	/^class InsertReqData:$/;"	c	inherits:
+InsertReqData.__init__	test.py	/^    def __init__(self, version,surl,sname,shash,sprehash,spresize,relate_web,verify,ssize):$/;"	m	class:InsertReqData	access:public
+MyDecoder	test.py	/^class MyDecoder(json.JSONDecoder):$/;"	c	inherits:json.JSONDecoder
+MyDecoder.__init__	test.py	/^    def __init__(self):$/;"	m	class:MyDecoder	access:public
+MyDecoder.dict2object	test.py	/^    def dict2object(self,d):$/;"	m	class:MyDecoder	access:public
+MyEncoder	test.py	/^class MyEncoder(json.JSONEncoder):$/;"	c	inherits:json.JSONEncoder
+MyEncoder.default	test.py	/^    def default(self,obj):$/;"	m	class:MyEncoder	access:public
+PageInfo	test.py	/^class PageInfo:$/;"	c	inherits:
+PageInfo.__init__	test.py	/^    def __init__(self,totalScore,properties):$/;"	m	class:PageInfo	access:public
+Pageproperties	test.py	/^class Pageproperties:$/;"	c	inherits:
+Pageproperties.__init__	test.py	/^    def __init__(self,url,insertTime):$/;"	m	class:Pageproperties	access:public
+QueryReqData	test.py	/^class QueryReqData:$/;"	c	inherits:
+QueryReqData.__init__	test.py	/^    def __init__(self, v,w):$/;"	m	class:QueryReqData	access:public
+__init__	test.py	/^    def __init__(self):$/;"	m	class:MyDecoder	access:public
+__init__	test.py	/^    def __init__(self, v,w):$/;"	m	class:QueryReqData	access:public
+__init__	test.py	/^    def __init__(self, version,surl,sname,shash,sprehash,spresize,relate_web,verify,ssize):$/;"	m	class:InsertReqData	access:public
+__init__	test.py	/^    def __init__(self,totalScore,properties):$/;"	m	class:PageInfo	access:public
+__init__	test.py	/^    def __init__(self,url,insertTime):$/;"	m	class:Pageproperties	access:public
+__init__	test.py	/^    def __init__(self,version,web,rs_url,rs_hash,rs_size,errcode):$/;"	m	class:CorrectReqData	access:public
+correct	test.py	/^def correct():$/;"	f	access:public
+correctperf	test.py	/^def correctperf(output):$/;"	f	access:public
+default	test.py	/^    def default(self,obj):$/;"	m	class:MyEncoder	access:public
+dict2object	test.py	/^    def dict2object(self,d):$/;"	m	class:MyDecoder	access:public
+insert	test.py	/^def insert():$/;"	f	access:public
+insertperf	test.py	/^def insertperf(output):$/;"	f	access:public
+qurey	test.py	/^def qurey():$/;"	f	access:public
+qureyperf	test.py	/^def qureyperf(output):$/;"	f	access:public
+responseOk	mx_word_filter.js	/^function responseOk(res){$/;"	f
+responseOk	smartDownloadHandler.js	/^function responseOk(res){$/;"	f
+responseProtocolErr	mx_word_filter.js	/^function responseProtocolErr(res){$/;"	f
+responseProtocolErr	smartDownloadHandler.js	/^function responseProtocolErr(res){$/;"	f
+responseQueryNotFound	mx_word_filter.js	/^function responseQueryNotFound(res){$/;"	f
+responseQueryNotFound	smartDownloadHandler.js	/^function responseQueryNotFound(res){$/;"	f
+responseQueryOk	mx_word_filter.js	/^function responseQueryOk(res,dataObj){$/;"	f
+responseQueryOk	smartDownloadHandler.js	/^function responseQueryOk(res,dataObj){$/;"	f
+responseSystemErr	mx_word_filter.js	/^function responseSystemErr(res){$/;"	f
+responseSystemErr	smartDownloadHandler.js	/^function responseSystemErr(res){$/;"	f
+responseVerifyErr	mx_word_filter.js	/^function responseVerifyErr(res){$/;"	f
+responseVerifyErr	smartDownloadHandler.js	/^function responseVerifyErr(res){$/;"	f
+uniResponse	mx_word_filter.js	/^function uniResponse(res,bodyObj){$/;"	f
+uniResponse	smartDownloadHandler.js	/^function uniResponse(res,bodyObj){$/;"	f

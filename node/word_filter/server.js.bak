@@ -1,0 +1,34 @@
+var smartDownloadHandler = require("./smartDownloadHandler");
+var config = require('./config');
+var log = require("./logger");
+var middleWare = require("./middleWare");
+var express = require('express');
+
+var start = function(){
+    var app = express();
+
+
+    app.use(middleWare.getReqBody);
+//    app.use(express.compress());
+//   
+   /*
+    app.post('/dlrecommend/insert', smartDownloadHandler.responseInsert);
+    app.post('/dlrecommend/query', smartDownloadHandler.responseQuery);
+    app.post('/dlrecommend/correct', smartDownloadHandler.responseCorrect);
+    
+	*/
+    app.post('/nickname/filter', smartDownloadHandler.responseCorrect);
+	
+    app.listen(config.serverPort);
+    log.logger.info("server listen on port:" + config.serverPort);
+};
+ 
+
+exports.start = start;
+
+
+
+
+
+
+ 

@@ -1,0 +1,36 @@
+/*
+var express = require('express');
+ 
+var app = express();
+ 
+app.get('/wines', function(req, res) {
+	    res.send([{name:'wine1'}, {name:'wine2'}]);
+});
+app.get('/wines/:id', function(req, res) {
+	    res.send({id:req.params.id, name: "The Name", description: "description"});
+});
+ 
+app.listen(3000);
+console.log('Listening on port 3000...');
+*/
+
+var mx_word_filter = require("./mx_word_filter")
+var config = require('./config');
+var log = require("./logger");
+var middleWare = require("./middleWare");
+var express = require('express');
+
+var start = function(){
+	var app = express();
+
+
+	app.use(middleWare.getReqBody);
+
+	app.post('/nickname/filter', mx_word_filter.word_filter);
+
+	app.listen(config.serverPort);
+	log.logger.info("server listen on port:" + config.serverPort);
+};
+
+exports.start = start;
+
