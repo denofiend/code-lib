@@ -86,9 +86,9 @@ int SyncTask::responseCode(const std::string & json)
 	}
 }
 
-SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri,
+SyncTask::SyncTask(mxsql::DataSource *datasource, const std::string&syncUri, const std::string&modifyUri,
 		int sleepTime, uint32_t idc_id, const std::string&logName) :
-		datasource_(datasource), syncUri_(syncUri), sleepTime_(sleepTime), idc_id_(
+		datasource_(datasource), syncUri_(syncUri), modifyUri_(modifyUri), sleepTime_(sleepTime), idc_id_(
 				idc_id), logName_(logName)
 {
 
@@ -400,14 +400,28 @@ void SyncTask::modifyTaskNickname(TaskBean & bean)
 			HttpsClient client;
 
 			std::string responseBody = client.httpPost(
-					"http://user-api.user.maxthon.cn/v1/modify/users/"
-							+ mxcore::UInteger(bean.getUserId()).toString(),
+					modifyUri_ + mxcore::UInteger(bean.getUserId()).toString() + "?from=mx_sync",
 					toModifyApiRequestJsonBody(MxUtil::getRandomString()),
 					"application/json");
 
 			logger(logName_).info(
 					"register nickname(%s) duplicate, response body of  user_api 's update api. body(%s)\n",
 					nickname.c_str(), responseBody.c_str());
+
+
+			if (104 == responseCode(responseBody))
+			{
+				logger(logName_).info("del task\n");
+				if (delTask(bean.getQueueId()))
+				{
+					logger(logName_).info("Del succes\n");
+				}
+				else
+				{
+					logger(logName_).info("Del failed \n");
+				}
+
+			}
 		}
 
 		{
