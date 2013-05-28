@@ -14,7 +14,7 @@ redis.on("error", function (err) {
 });
 
 function make_mx_response(res, mx_response){
-	res.send({code:mx_reponse.code, message:mx_response.message});
+	res.send({code:mx_response.code, message:mx_response.message});
 }
 
 function Mx_response(code, message){
@@ -22,10 +22,8 @@ function Mx_response(code, message){
 	this.message = message;
 }
 
-var word_filter = function (req,res){
-	log.logger.trace(">>> word_filter body:"+ req.body);
-
-	var mx_response = new Mx_response(110, 'Tragedy, the word is illegal');
+var word_filter_get = function (req,res){
+	log.logger.trace(">>> word_filter_get body:"+ req.body);
 
     if(!req.body){
         log.logger.error("insert service body is null");
@@ -33,31 +31,67 @@ var word_filter = function (req,res){
         return;
     }
 
-	var words = redis.zrange("nickname", 0, -1, function(err){
+    var bodyObj = JSON.parse(req.body);
+	log.logger.debug("bodyOjb.word:"+bodyObj.word);
+
+	redis.smembers("nickname", function(err, words){
+
+		var mx_response = new Mx_response(110, 'Tragedy, the word is illegal');
+
         if(err){
-            log.logger.error("redis zrange error in word_filter");
+            log.logger.error("redis smembers error in word_filter_get");
+
 			mx_response.code = 300;
-			mx_response.message = "reids zrange error in word_filter";
-			make_mx_response(res, new Mx_response(300, 'redis zrange error in word_filter'));
+			mx_response.message = "reids smembers error in word_filter_get";
+
+		}else{
+
+			var i = 0;
+			for (i = 0; i < words.length; ++i) {
+				var n = bodyObj.word.indexOf(words[i]);
+
+				if (-1 != n) {
+					break;
+				}
+			}
+
+			log.logger.debug("words.length:" + words.length + ", i:"+i);
+
+			if ((words.length === undefined) || words.length === i) {
+				log.logger.debug("words.length:" + words.length + ", i:"+i);
+				mx_response.code = 1;
+				mx_response.message = 'Congratulations, this word is ok';
+			}
+		}
+
+		make_mx_response(res, mx_response);
+
+	});
+
+}
+
+var word_filter_set = function (req,res){
+	log.logger.trace(">>> word_filter_set body:"+ req.body);
+
+	var mx_response = new Mx_response(1, 'set success');
+
+    if(!req.body){
+        log.logger.error("word_filter_set body is null");
+		make_mx_response(res, new Mx_response(200, 'http request body is empty'));
+        return;
+    }
+
+    var bodyObj = JSON.parse(req.body);
+
+	var words = redis.sadd("nickname", bodyObj.word, function(err, ret){
+        if(err || 0 === ret){
+            log.logger.error("redis sadd error in word_filter_set");
+			mx_response.code = 300;
+			mx_response.message = "reids sadd error in word_filter_set";
+			make_mx_response(res, mx_response);
 			return;
 		}
 	});
-
-    var bodyObj = JSON.parse(req.body);
-	var i = 0;
-
-	for (i = 0; i < words.length; ++i) {
-		var n = bodyObj.word.indexOf(words[i]);
-
-		if (-1 != n) {
-			break;
-		}
-	}
-
-	if (words.length === i) {
-		mx_response.code = 1;
-		mx_response.message = 'Congratulations, this word is ok';
-	}
 
 	make_mx_response(res, mx_response);
 }
@@ -141,6 +175,7 @@ var getSha1 = function(sourceStr){
     return hashStr;
 }
 
-exports.word_filter = word_filter;
+exports.word_filter_get = word_filter_get;
+exports.word_filter_set = word_filter_set;
 
  

@@ -26,7 +26,8 @@ var start = function(){
 
 	app.use(middleWare.getReqBody);
 
-	app.post('/nickname/filter', mx_word_filter.word_filter);
+	app.post('/nickname/filter/get/v1', mx_word_filter.word_filter_get);
+	app.post('/nickname/filter/set/v1', mx_word_filter.word_filter_set);
 
 	app.listen(config.serverPort);
 	log.logger.info("server listen on port:" + config.serverPort);
