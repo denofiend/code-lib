@@ -114,7 +114,7 @@ void dlist_traversal(double_linked_list_node_t* head)
 	printf("================\n");
 }
 
-/* reversion tow adjacent node int the double linked list */
+/* reversion tow adjacent node in the double linked list */
 void dlist_reversion(double_linked_list_node_t** head)
 {
 	double_linked_list_node_t *f, *s;

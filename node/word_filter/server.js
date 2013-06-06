@@ -24,10 +24,24 @@ var start = function(){
 	var app = express();
 
 
+
 	app.use(middleWare.getReqBody);
+
+	//app.set('views', __dirname + './');
+	//app.use(express.static(__dirname + './html'));
+	//app.engine('html', require('ejs').renderFile);
+	app.set('views', __dirname + '/html');
+	app.engine('html', require('ejs').renderFile);
+	app.engine('js', require('ejs').renderFile);
+
 
 	app.post('/nickname/filter/get/v1', mx_word_filter.word_filter_get);
 	app.post('/nickname/filter/set/v1', mx_word_filter.word_filter_set);
+
+	app.get('/hello.html', function(req, res) {
+
+		res.render('hello.html');
+	});
 
 	app.listen(config.serverPort);
 	log.logger.info("server listen on port:" + config.serverPort);
