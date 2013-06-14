@@ -39,7 +39,6 @@ var start = function(){
 	app.post('/nickname/filter/set/v1', mx_word_filter.word_filter_set);
 
 	app.get('/hello.html', function(req, res) {
-
 		res.render('hello.html');
 	});
 
