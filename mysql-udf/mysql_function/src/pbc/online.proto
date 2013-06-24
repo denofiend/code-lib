@@ -1,0 +1,12 @@
+package online.message.maxthon.cn;
+
+message Online {
+  required int32 id = 1;
+  optional int32 mx2 = 2;
+  optional int32 mx3 = 3;
+  optional int32 mxa = 4;
+  optional int32 mxios = 5;
+  optional int32 mxmac = 6;
+  optional int32 online_flag = 7;
+  optional int32 grade = 8;
+  }

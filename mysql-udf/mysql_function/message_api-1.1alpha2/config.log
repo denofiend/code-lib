@@ -1,0 +1,48 @@
+Configure started  2012年 07月 30日 星期一 16:57:37 CST
+
+Using Spread in:  /usr/local 
+Using MySQL in:   /usr/local/include/mysql/ 
+
+
+.. TESTING test_my_config_h
+cc -I/usr/local/include/mysql/ -I/usr/local/include/mysql//include    test_my_config_h.c   -o test_my_config_h
+.. SUCCESSFUL! ..
+
+.. TESTING test_pthread
+cc     test_pthread.c   -o test_pthread
+test_pthread.c:2:24: 错误：my_global.h：没有那个文件或目录
+test_pthread.c:3:24: 错误：my_pthread.h：没有那个文件或目录
+test_pthread.c:6:2: 错误：#error _my_pthread_h not defined
+make: *** [test_pthread] 错误 1
+
+.. TESTING test_pthread
+cc -I/usr/local/include/mysql/    test_pthread.c   -o test_pthread
+.. SUCCESSFUL! ..
+
+.. TESTING test_spread
+cc -I/usr/local/include    test_spread.c   -o test_spread
+.. SUCCESSFUL! ..
+
+.. TESTING test_spread_ver
+cc -I/usr/local/include    test_spread_ver.c   -o test_spread_ver
+.. SUCCESSFUL! ..
+
+Spread Version: 4
+
+.. TESTING test_spread_lib
+cc -I/usr/local/include  -lspread -L/usr/local/lib  test_spread_lib.c   -o test_spread_lib
+/usr/local/lib/libspread.so: undefined reference to `dladdr'
+collect2: ld 返回 1
+make: *** [test_spread_lib] 错误 1
+
+.. TESTING test_spread_lib
+cc -I/usr/local/include  -lspread -L/usr/local  test_spread_lib.c   -o test_spread_lib
+/usr/local/lib/libspread.so: undefined reference to `dladdr'
+collect2: ld 返回 1
+make: *** [test_spread_lib] 错误 1
+
+.. TESTING test_spread_lib
+cc -I/usr/local/include  -lspread  test_spread_lib.c   -o test_spread_lib
+/usr/local/lib/libspread.so: undefined reference to `dladdr'
+collect2: ld 返回 1
+make: *** [test_spread_lib] 错误 1

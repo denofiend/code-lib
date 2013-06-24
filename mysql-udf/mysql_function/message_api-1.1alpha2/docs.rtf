@@ -1,0 +1,72 @@
+{\rtf1\mac\ansicpg10000\cocoartf824\cocoasubrtf330
+{\fonttbl\f0\fswiss\fcharset77 Optima-Bold;\f1\froman\fcharset77 Times-Roman;\f2\fnil\fcharset77 Monaco;
+\f3\froman\fcharset77 Times-Italic;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10240\viewh9820\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\qc\pardirnatural
+
+\f0\b\fs28 \cf0 The MySQL Message API\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+\cf0 \
+Introduction\
+\
+
+\f1\b0 The MySQL Message API is a set of User-Defined Functions (UDFs) which allow MySQL database servers to send and receive messages across a network.  These functions make it possible for a MySQL user to send a message to many recipients using a simple SQL query.  For instance, the query\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\qc\pardirnatural
+
+\f2\fs24 \cf0 SELECT send_mesg("orders", "two eggs over easy") \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f1\fs28 \cf0 \
+will send the message "two eggs over easy" to all the members of a message group named "orders."  These members may include other MySQL users on the same server, users on other MySQL servers, and other applications.  The group may include members on the sender's local area network as well as members at remote locations on the Internet.  A sample message group might consist of MySQL servers, Apache web servers, and Java applications at two different data centers.\
+\
+Messages are sent in a way that is reliable, ordered, and asynchronous. "Reliable" and "ordered" mean that the message API can guarantee that all members of a group are able to receive every message sent to that group, and that all members will receive the messages in the same order.  "Asynchronous" means that a sender (or other group member) is not required to wait to confirm that each group member has received one message before sending another.  Asynchronous message transfer allows each member to process messages at its own pace, without missing any messages, and without slowing down the rest of the group. \
+\
+Despite this basic fact of asynchronous delivery, the Message API is still able to make some of the guarantees that a database application might require about which group members have or have not received a message.  Consider the query below.\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\qc\pardirnatural
+
+\f2\fs24 \cf0 \
+ SELECT send_mesg("orders","two eggs over easy","kitchen")\
+ \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f1\fs28 \cf0 This query will return the value 1 if it can guarantee that the message has been sent to the group and that the group has some member named "kitchen" who was present to receive it; the query will return the value 0 if the message was sent, but the member "kitchen" was not present; and it will return NULL if some error prevented the message from being sent at all.  The precise semantics of this guarantee are discussed later.\
+
+\f0\b \
+\
+Spread\
+\
+
+\f1\b0 \
+\
+The Message API is built using a high-performance Open Source messaging framework called the Spread Toolkit, which is available from 
+\f3\i http://www.spread.org
+\f1\i0  and with commercial support and services  available from 
+\f3\i spread-concepts.com
+\f1\i0 .   Spread supplies a foundation for reliable Group Communications System, and the Message API provides a simple bridge which allows MySQL servers to join that system.  \
+\
+Spread is widely-supported by many Open Source projects and other software components.  For Java, there is both a native Spread API and a Spread-based implementations of the standard Java Messaging Service, or JMS.  Many other languages, including PHP and Perl, have Spread API modules available.   The Apache web server can use Spread for logging (with 
+\f3\i mod_log_spread
+\f1\i0 ) or server load balancing (with 
+\f3\i mod_backhand
+\f1\i0 ), among others. \
+\
+Spread is deployed by running a "Spread daemon" on each server.  The applications on a server connect to their local daemon in order to send messages, join groups, and receive messages. Message delivery from a Spread daemon to its local clients is asynchronous, and the daemon will hold each client's unread messages until it is ready to receive them.  The message passing among the Spread daemons on a network, however, is tightly controlled and synchronous, providing guaranteed delivery and message ordering. \
+\
+The Message APIs depend on Spread in several important ways:\
+\
+  \'a5 The UDFs must be linked against the thread-safe Spread library, 
+\f3\i libtspread
+\f1\i0 .\
+  \'a5 The Message APIs require a spread daemon to be running on each MySQL server.  \
+  \'a5 The Spread daemons must be configured, using 
+\f3\i spread.conf
+\f1\i0  files, to define the domain for group membership. \
+\
+The Message API consists of five User Defined Functions,  provided by a single file 
+\f3\i message_api.so
+\f1\i0 ,  which can be dynamically loaded into a MySQL database server.\
+\
+\
+}

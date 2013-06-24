@@ -1,0 +1,39 @@
+An online bugs database will be available soon.
+
+-- RELEASE HISTORY:
+ 1.0 Beta 1, 6 April 2006.
+ 1.0 Beta 2, 7 April 2006.  Fix linking problems on Ubuntu 5.  srandomdev() 
+  does not exist on Linux, and I removed the need to resolve the mysql 
+  global symbol my_charset_latin1
+ 1.0 Beta 3, 8 April 2006.  The "configure" script should now be able to 
+  create a proper Makefile for Spread 4, with -lspread rather than -ltspread.
+
+CODING STYLE BUG?
+Rather than passing such a variety of things in initid->ptr, always pass an
+"explicit init structure" 
+
+OPEN BUGS
+--
+BUGS IN C CODE:
+ ---
+18 - Using jms4spread to send messages seems to trigger some strange bugs.  (1) mesg_status() displays group as "cndsrs" when it should be "cnds" -- wrong string length?  (2)  recv_mesg() never got a self-leave message after leave_mesg_group() from another thread.
+17 - Many of the functions can cause a server crash if they are passed a NULL string argument. (FIXED)
+16 - The memberships thread needs to be able to handle a return value of -8
+(CONNECTION_CLOSED).
+7 - For guaranteed messages, performance suffers if a group has lots of members because the member list is searched linearly.  It could be stored in a btree instead.
+10 (FIXED) - There's a memory leak, because old versions of membership lists are never deleted.  (Fixed with the introduction of the memberships_purge_old_lists() code; deleting old versions is expensive, so it's only done if they are using more than memory than LIST_MEM_IS_BIG - defined at compile time - and there are more than three versions. )
+11 - Handling of common errors needs to be improved.  Example: what happens if the spread daemon crashes and restarts.
+12 - Many of the values that are configured at compile-time should be configurable at runtime.
+
+ ---
+LINKER BUGS:
+14 - In the message API code, I can use MySQL's internal thread routines -- but
+libtspread is still going to directly use libpthread code.
+15 - I have tested the UDF on FreeBSD and OS X, but still have not confirmed 
+that it links and runs correctly on Linux.  This is going to depend a great 
+deal on pthreads, and on the mysql include files being correct for the target
+system.
+
+BUGS IN BUILD & INSTALL SCRIPTS:
+ ---
+13 - It's not always correct to install the .so file in /usr/local/lib 

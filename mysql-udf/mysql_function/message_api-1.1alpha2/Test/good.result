@@ -1,0 +1,29 @@
+name = fred                              -- parsed 
+       name       -> fred            (4)
+name = joe, handle=white                 -- parsed 
+       handle     -> white           (5)
+       name       -> joe             (3)
+name=joe,handle=blue                     -- parsed 
+       handle     -> blue            (4)
+       name       -> joe             (3)
+NAME = joseph                            -- parsed 
+       name       -> joseph          (6)
+name = !!(*$&^&%*                        -- parsed 
+       name       -> !!(*$&^&%*      (10)
+group = orders , name=bob,handle=12      -- parsed 
+       group      -> orders          (6)
+       handle     -> 12              (2)
+       name       -> bob             (3)
+group = 123456789abcdefghijklmnopqrst    -- parsed 
+       group      -> 123456789abcdefghijklmnopqrst (29)
+=                                        -- not parsed 
+ ,                                       -- not parsed 
+= ,                                      -- not parsed 
+rollercoaster = thunder road             -- not parsed 
+,,==,                                    -- not parsed 
+name                                     -- not parsed 
+  name                                   -- not parsed 
+ = kpe                                   -- not parsed 
+GROUP = AAA, name                        -- not parsed 
+group = mimoo =                          -- not parsed 
+@(#*%&^A                                 -- not parsed 

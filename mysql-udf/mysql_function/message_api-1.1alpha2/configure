@@ -1,0 +1,247 @@
+#!/bin/sh
+
+# (C) 2006 MySQL AB / MySQL Inc. / John David Duncan 
+# Distributed under the terms of the GNU Public License, Version 2
+
+# This script is not created by GNU Autoconf 
+# (though parts of it are derived from autoconf scripts)
+
+echo "Configure started " `date` > config.log
+
+usage () {
+
+ test -n "$done_usage" && return
+ done_usage=done
+
+ echo "This is the configuration script for the MySQL Message API."
+ echo
+ echo "Building the Message API requires: "
+ echo "      An installed copy of MySQL, including header files."
+ echo "      An installed copy of Spread, including both headers and libraries."
+ echo 
+ echo "MySQL source code is available from www.mysql.com."
+ echo "Spread is available from www.spread.org."
+ echo 
+ echo
+ echo "usage:  $0 --mysql=/path --spread=/path"
+ echo 
+ echo "Options: "
+ echo
+ echo "    --mysql=/path  [defaults to $mysql_default]"
+ echo "              Path to standard MySQL include files" 
+ echo "    --spread=/path [defaults to $spread_default]"
+ echo "              Path to an installed copy of the Spread toolkit."
+ echo
+}
+
+not_found() {
+  usage
+  echo " ERROR:      Could not find $1."
+}
+
+##
+## Default values if the MySQL and Spread locations were not defined
+#
+mysql_default=`mysql_config --include | sed s/^-I//`
+spread_default="/usr/local"
+
+while test $# != 0
+do
+  case $1 in
+   --*=*)
+    conf_option=`expr "x$1" : 'x\([^=]*\)='`
+    conf_arg=`expr "x$1" : 'x[^=]*=\(.*\)'`
+    shift
+    ;;
+   -*) 
+    conf_option=$1
+    conf_arg=$2
+    shift 
+    shift
+    ;;
+   *)
+    shift
+    ;;
+  esac
+  
+  case $conf_option in 
+    --with-mysql|--mysql|-with-mysql|-mysql)
+      mysql_source=$conf_arg
+      ;;
+    --with-spread|--spread|-with-spread|-spread)
+      spread_install=$conf_arg 
+      ;;
+    --help)
+      usage
+      exit
+      ;;
+  esac
+done
+
+echo $mysql_source
+echo $spread_install
+
+##
+## Use the default values?
+##
+if [ -z "$mysql_source" ]
+  then
+    mysql_source=$mysql_default
+    # Expand ../.. for prettier display
+    d0=`pwd`  
+    d1=`dirname $d0` 
+    d2=`dirname $d1` 
+    d3=`basename $d2` 
+    echo $d3 | grep -q mysql && mysql_default = "$mysql_default (i.e. $d2)"
+fi
+#
+if [ -z "$spread_install" ]
+  then
+    spread_install=$spread_default
+fi
+
+(  echo
+   echo "Using Spread in:  $spread_install "
+   echo "Using MySQL in:   $mysql_source "
+   echo
+) >> config.log
+
+
+## A quick test to see if perhaps the MySQL source tree has not been configured
+if test -e "$mysql_source/mysql_version.h.in" \
+    -a ! -e "$mysql_source/mysql_version.h" 
+   then 
+     usage
+     echo " ERROR:      You must run \"configure\" in the MySQL source tree "
+     echo "             before building the Message API."
+     echo
+     echo "MySQL source tree is not configured." >> config.log
+     exit 1
+fi
+
+compile_test() {
+  success=1
+  test -n "$CFLAGS" && export CFLAGS
+  test -n "$LDFLAGS" && export LDFLAGS
+  rm -f test_$1
+  cp -p Conf/test_$1.c .
+  ( echo
+    echo  .. TESTING test_$1 
+    make test_$1 && echo .. SUCCESSFUL! .. && return 0
+    return 1
+  ) >> config.log 2>&1
+  success=$?
+  test "$2" != "keep" && rm -f test_$1 test_$1.c
+  return $success
+}
+
+
+## Now run a test to make sure that my_config.h can be found -somewhere-
+CFLAGS="-I$mysql_source -I$mysql_source/include"
+if ! compile_test my_config_h
+  then
+    usage
+    not_found "MySQL header file my_config.h"
+    exit
+fi
+
+
+## Look for needed MySQL header files under mysql_source and mysql_source/include
+## and attempt to compile a small file with them
+#
+mysql_includes=""
+for path in '' "-I$mysql_source" "-I$mysql_source/include"
+  do
+    CFLAGS=""
+    test -n "$path" -a -n "$mysql_source" && CFLAGS="$path"
+    if compile_test pthread 
+      then
+        mysql_includes=$path
+        break
+    fi
+done
+
+## Look for needed sp.h file under spread_source and spread_source/include
+## and attempt to compile a small file
+#
+spread_includes=""
+spread_inc_ok=""
+for path in "-I$spread_install/include" "-I$spread_install" ''
+  do
+    CFLAGS=""
+    test -n "$path" -a -n "$spread_install" && CFLAGS=$path
+    if compile_test spread 
+      then
+        spread_includes=$path
+        spread_inc_ok=1
+        break
+    fi
+done
+
+## What version of Spread?
+test -n "$spread_includes" && CFLAGS="$spread_includes"
+compile_test spread_ver keep
+spread_version=`./test_spread_ver`
+rm -f test_spread_ver.c test_spread_ver
+( echo
+  echo Spread Version: $spread_version ) >> config.log
+
+
+## Test linking with the old (libsp) and new (libspread) Spread lib,
+## though in the end, we will actually link with the thread-safe version,
+## libtsp or libtspread for Spread 3 (lipspread for Spread 4)
+#
+spread_ldflags=""
+for lib in "spread" "sp"
+ do 
+   test -n "$spread_ldflags"  && break
+   for path in "$spread_install/lib" "$spread_install" ''
+      do
+        CFLAGS=""  
+        LDFLAGS=""
+        test -n "$spread_includes" && CFLAGS="$spread_includes"
+        if [ -n "$lib" ] 
+         then LDFLAGS="-l$lib" 
+			echo $LDFLAGS
+         if [ "$spread_version" = "3" ] 
+           then sp_ld1="-lt$lib";
+         else sp_ld1="-l$lib";
+         fi
+        fi
+        test -n "$path" && LDFLAGS="$LDFLAGS -L$path" && sp_ld2="-L$path"
+        if compile_test spread_lib
+          then
+            spread_ldflags="$sp_ld1 $sp_ld2"
+            break
+        fi
+        test -n "$spread_install" || break
+    done
+done
+
+test -z "$mysql_includes" && not_found "MySQL source files"
+test -z "$spread_inc_ok" && not_found "Spread header file sp.h"
+test -z "$spread_ldflags" && not_found "Spread library files"
+
+test -n "$done_usage"  && echo && exit 1
+
+echo " ... MySQL OK:   $mysql_includes"
+echo " ... Spread OK:  $spread_includes (Version: $spread_version)"
+echo " ... Linking OK: $spread_ldflags"
+
+(
+  cd Conf
+  ( echo "LIB_FLAGS = $spread_ldflags"  
+    echo "INC_FLAGS = $mysql_includes $spread_includes"
+  ) > Make_file_head
+  CONF_GUESS=`./gnu.config.guess`
+   
+  ## Apparently all x86_64 linuxes need -fPIC.
+  if echo $CONF_GUESS | grep -q 'x86_64.*linux'
+   then echo "LINK_FLAGS = -fPIC" >> Make_file_head
+  fi
+  
+  so_make_file=`echo $CONF_GUESS | awk -f choose_make.awk`
+  cat Make_file_head "$so_make_file" Make_file_tail
+) > Makefile
+
+echo " Makefile has been created."

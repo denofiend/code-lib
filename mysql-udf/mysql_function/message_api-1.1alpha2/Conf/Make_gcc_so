@@ -1,0 +1,3 @@
+
+message_api.so: udf_spread.c udf_spread.h
+	${CC} -shared ${LINK_FLAGS} -o message_api.so ${INC_FLAGS} udf_spread.c options.c ${LIB_FLAGS}

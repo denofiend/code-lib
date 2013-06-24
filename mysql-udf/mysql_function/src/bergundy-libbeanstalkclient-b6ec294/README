@@ -1,0 +1,11 @@
+libbeanstalkclient.
+
+This is a non blocking implementation of a beanstalk client.
+It is ment to be embedded in event loops like libevent/libev.
+
+To enable tests you will need check (http://check.sourceforge.net/)
+
+TODO:
+
+1. Deal with multiple beanstalkd servers. 
+2. Add more tests.

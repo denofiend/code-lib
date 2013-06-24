@@ -1,0 +1,12 @@
+
+DARWIN_LINK_FLAGS=-bundle -flat_namespace -undefined suppress
+
+message_api.so:  udf_spread.o options.o
+	${CC} ${DARWIN_LINK_FLAGS} -o message_api.so udf_spread.o options.o ${LIB_FLAGS}
+
+udf_spread.o: udf_spread.c udf_spread.h options.h
+	${CC}  -c -Wall ${INC_FLAGS} udf_spread.c
+  
+options.o: options.c udf_spread.h options.h
+	${CC}  -c -Wall ${INC_FLAGS} options.c
+  
