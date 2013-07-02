@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/801115799/!svn/ver/4/zfbj/2/.svny
+END
+web_config.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/801115799/!svn/ver/3/zfbj/2/.svny/web_config.yaml
+END
+qzconf.conf
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/801115799/!svn/ver/4/zfbj/2/.svny/qzconf.conf
+END
+php.ini
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/801115799/!svn/ver/4/zfbj/2/.svny/php.ini
+END
+conf.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/801115799/!svn/ver/3/zfbj/2/.svny/conf.yaml
+END
+nginx.conf
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/801115799/!svn/ver/4/zfbj/2/.svny/nginx.conf
+END
+php-fpm.conf
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/801115799/!svn/ver/4/zfbj/2/.svny/php-fpm.conf
+END

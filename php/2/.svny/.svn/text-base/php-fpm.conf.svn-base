@@ -1,0 +1,18 @@
+[global]
+pid = /data/cloud/php-fpm-2.pid;
+error_log = /data/cloud/logs/php-fpm-2.log;
+log_level = error;
+daemonize = yes;
+[www]
+listen = /tmp/php-fpm-2;
+listen.backlog = 1024;
+user = nobody;
+group = nobody;
+pm = dynamic;
+pm.max_children = 29;
+pm.start_servers = 1;
+pm.min_spare_servers = 1;
+pm.max_spare_servers = 29;
+env[CEE_WSNAME] = 801115799_zfbj;
+env[CEE_DOMAINNAME] = 2.zfbj.app801115799.twsapp.com;
+env[CEE_VERSIONID] = 2;

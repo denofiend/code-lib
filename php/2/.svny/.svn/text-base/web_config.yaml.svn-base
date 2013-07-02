@@ -1,0 +1,10 @@
+---
+app_id: 801115799
+domain: 1.zfbj.app801115799.twsapp.com
+version: 1
+runtime: php5.3.5
+php:
+  PHP:
+    extension:
+    - /usr/local/services/php/extension/apc.so
+...
