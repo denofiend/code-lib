@@ -1,0 +1,56 @@
+================
++  配置
+================
+config.js
+
+
+exports.serverPort = 8080
+exports.processNum = 1
+
+exports.serverLogPath = "./mx_word_filter.log"
+exports.chukwaLogPath = "./chukwa.log"
+exports.logLevel = "trace"
+exports.logReservedDays = 10
+exports.serverLogPort = 5001
+exports.chukwaLogPort = 5002
+
+exports.redisHost = "127.0.0.1"
+exports.redisPort = 6379
+
+exports.userDownLoadListsNum = 10
+exports.userDownLoadFailListsNum = 10
+
+exports.proportionThreshold = 60
+exports.timesThreshold = 10
+exports.verifyKey = 'eUYhD8Vdl1TUWhiVP2P__GeC'
+
+ 
+
+
+================
++  安装运行
+================
+
+1) 安装Node.js
+http://nodejs.org/download/
+
+2) 安装forever
+npm -g install forever
+
+3) 安装依赖库
+#切换到package.json所在的目录下
+./install.sh  <log-path>
+
+4) 运行服务
+#切换到package.json所在的目录下
+forever start index.js
+
+#注：forever是一个后台守护进程会监控Node.js进程的运行状况（详细参考forever命令帮助）
+
+
+5)log roll
+add the following to crontab:
+1 0 * * * root INSTALL_PATH/log_turn.sh
+ 
+
+

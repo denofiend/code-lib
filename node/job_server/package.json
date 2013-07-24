@@ -1,0 +1,30 @@
+{
+  "name": "mx_word_filter",
+  "description": "Illegal word filter, such as: 管理员",
+  "version": "0.0.1",
+  "author": {
+    "name": "DenoFiend",
+    "email": "denofiend@gmail.com"
+  },
+  "main": "./index.js",
+  "dependencies": {
+    "async": ">=0.2.5",
+    "log4js": ">=0.6.3",
+    "redis": ">=0.8.2",
+    "express":">=3.1.0",
+	"ejs":">=0.8.4",
+	"mysql":">=2.0.0-alpha8",
+	"cron":">=1.0.1",
+	"time":"*"
+  },
+  "engines": {
+    "node": "0.10.4"
+  },
+  "_id": "mx_word_filter@0.0.1",
+  "optionalDependencies": {},
+  "_engineSupported": true,
+  "_npmVersion": "1.2.14",
+  "_nodeVersion": "v0.10.4",
+  "_defaultsLoaded": true,
+  "_from": "maxthon"
+}
