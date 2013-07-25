@@ -9,7 +9,8 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
--include src/subdir.mk
+-include src/sync/subdir.mk
+-include src/mul_task/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
