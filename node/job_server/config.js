@@ -2,19 +2,17 @@
  * New node file
  */
 
+/* redis config */
 exports.redisHost = "10.100.15.7"
 exports.redisPort = 6379
 
-exports.serverPort = 8080
-exports.processNum = 1
 
+/* log config */
 exports.serverLogPath = "/data/logs/mx_word_filter/mx_word_filter.log"
 exports.chukwaLogPath = "/data/logs/mx_word_filter/chukwa.log"
 exports.logLevel = "trace"
 
-exports.userDownLoadListsNum = 10
-exports.userDownLoadFailListsNum = 10
-
+/* other config */
 exports.proportionThreshold = 60
 exports.timesThreshold = 10
 exports.verifyKey = 'eUYhD8Vdl1TUWhiVP2P__GeC'
@@ -45,29 +43,28 @@ exports.syncIndexSelectSql = "SELECT `source`, `rss_max_id`, `done_max_id`, `don
 
 exports.syncIndexKey = "dc_index_job_list"
 exports.syncIndexMysqlSelectEvent = "syncIndexMysqlSelectEvent"
+exports.syncIndexRedisKey = "dc_index_job_list"
 
 exports.syncDoneJobSelectSql = "SELECT `status` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncDoneJobSelectMysqlSelectEvent = "syncDoneJobSelectMysqlSelectEvent"
 
 exports.syncBodySelectSql = "SELECT `summary` FROM `dc_done_job_body_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncBodySelectMysqlSelectEvent = "syncBodySelectMysqlSelectEvent"
+exports.syncBodyRedisKey = "dc_done_job_body_cache"
 
 exports.syncImgSelectSql = "SELECT `imgurl`, `imgsize` FROM `dc_done_job_img_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncImgSelectMysqlSelectEvent = "syncImgSelectMysqlSelectEvent"
 exports.syncImgKey = "dc_img:"
 
 
+exports.syncBaseInfoSelectSql = "SELECT `title`, `pushdate`, `url`, `ifimg`, `lang`, `updatetime`, `contenttype`, `status`, `hashcode`, `description` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
+exports.syncBaseInfoSelectMysqlSelectEvent = "syncBaseInfoSelectMysqlSelectEvent"
+exports.syncBaseInfoRedisKey = "dc_done_job_base_cache";
 
 /* db config*/
 exports.db_host = "10.0.6.247"
 exports.db_user = "DataCenter"
 exports.db_pwd = "DataCenter"
 exports.database = "DataCenter"
-
-
-
-
-
-
 
 

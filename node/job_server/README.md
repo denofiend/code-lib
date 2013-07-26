@@ -2,13 +2,12 @@
 Name
 ====
 
-word filter service.
+ job server of data center project in maxthon.
 
 
 Description
 ===========
-1. /nickname/filter/set/v1
-2. /nickname/filter/get/v1
 
+1. get source data from mysql, and then set to redis.
 
 
