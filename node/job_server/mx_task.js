@@ -6,21 +6,49 @@ var config = require('./config');
 var mx_mysql = require('./mx_mysql'); 
 var redisModule = require("redis");
 var async = require("async");
-var crypto = require('crypto');
+var zlib = require('zlib');
 
 var redis = redisModule.createClient(config.redisPort,config.redisHost,{no_ready_check:true});
 redis.on("error", function (err) {
 	    log.logger.error("redis error event - " + config.redisHost + ":" + config.redisPort + " - " + err.toString());
 });
 
+function MIN_ID_HASH_KEY(source){
+	return source + ":min_id";
+}
+
+function MAX_ID_HASH_KEY(source){
+	return source + ":max_id";
+}
+
+function MxArray(min_id, max_id) {
+	var ids = new Array();
+	for (var id = min_id; id <= max_id; ++id) {
+		ids.push(id);
+	}
+	return ids;
+}
+
+function hset_redis_callback(key, hash_key, hash_val, callback){
+	log.logger.trace(">>> hset_redis");
+
+	redis.hset(key, hash_key, hash_val, function(err){
+		if(err){
+			callback("redis hset error:" + err.toString(), null);
+
+		}else{
+			log.logger.info("redis hset success:(" + key + "," + hash_key + "," + hash_val + ")");
+		}
+	});
+
+}
+
 function hset_redis(key, hash_key, hash_val){
 	log.logger.trace(">>> hset_redis");
 
 	redis.hset(key, hash_key, hash_val, function(err){
 		if(err){
-
 			log.logger.error("redis hset error:" + err.toString());
-
 		}else{
 			log.logger.info("redis hset success:(" + key + "," + hash_key + "," + hash_val + ")");
 		}
@@ -47,7 +75,6 @@ var lang_adapter_task = function (){
 
 }
 
-
 var country_adapter_task = function (){
 	log.logger.trace(">>> country_adapter_task");
 
@@ -67,9 +94,6 @@ var country_adapter_task = function (){
 	});
 
 }
-
-
-
 
 var channle_list_task = function (){
 	log.logger.trace(">>> channel_task");
@@ -104,8 +128,8 @@ var channle_list_task = function (){
 
 }
 
-function getDoneRangeFromRedis(key, min_hash_key, max_hash_key, eventName) {
-	log.logger.trace(">>> getDoneRangeFromReids: key: " + key + ", min_hash_key:" + min_hash_key + ",max_hash_key:" + max_hash_key);
+function get_done_range_from_redis(key, min_hash_key, max_hash_key, eventName) {
+	log.logger.trace(">>> get_done_range_from_redis: key: " + key + ", min_hash_key:" + min_hash_key + ",max_hash_key:" + max_hash_key);
 
 	redis.hmget(key, min_hash_key, max_hash_key, function(err, rows){
 		if(err){
@@ -128,182 +152,149 @@ function getDoneRangeFromRedis(key, min_hash_key, max_hash_key, eventName) {
 	});
 }
 
-
-function do_parallel_job(source, min_id, max_id, callback) {
+function get_status_of_task(source, id, callback) {
+	/* get status from the db */
 	var tmp_sql = config.syncDoneJobSelectSql.replace('?', source);
+	var sql = tmp_sql.replace('?', id);
+	var eventName = config.syncDoneJobSelectMysqlSelectEvent + ":" + source + ":" + id;
 
-	for (var id = min_id; id <= max_id; ++id) {
+	mx_mysql.mysql_select(sql, eventName);
 
-		var sql = tmp_sql.replace('?', id);
-		var eventName = config.syncDoneJobSelectMysqlSelectEvent + ":" + source + ":" + id;
+	mx_mysql.emitter.on(eventName, function(records){
+		log.logger.debug("mysql here is right");
 
-		(function(sql, eventName, id){
+		if (0 === records.length) {
+			callback('records.length is 0', null);
 
-			log.logger.debug("sql:" + sql);
-			log.logger.debug("eventName:" + eventName);
-			log.logger.debug("id:" + id);
+		} else if (1 != records.length) {
+			callback("records's length is not 1", null);
+		} else {
+			var status = records[0].status;
+			log.logger.debug("status is :" + status);
 
-			// get the status of the job
-			mx_mysql.mysql_select(sql, eventName);
-
-			mx_mysql.emitter.on(eventName, function(records){
-
-				log.logger.debug("on eventName:" + eventName);
-
-				if (0 === records.length) {
-
-					log.logger.error("get nothing");
-
-				} else if (1 != records.length) {
-					log.logger.error("records's length is not 1 :" + records.length);
-
-				} else {
-					log.logger.debug("status:" + records[0].status);
-
-					var job_status = records[0].status;
-
-					if (0 === job_status) {
-
-						log.logger.debug("status:" + records[0].status);
-						log.logger.info("not get body success for source(" + source + "),id(" + id + ")");
-
-					} else if (1 === job_status) {
-
-						// get the body of the job
-						log.logger.debug("job_status:" + job_status);
-
-						var body_sql = config.syncBodySelectSql.replace('?', source);
-						body_sql = body_sql.replace('?', id);
-
-						var body_event_name = config.syncBodySelectMysqlSelectEvent + source + id;
-
-						mx_mysql.mysql_select(body_sql, body_event_name);
-
-						mx_mysql.emitter.on(body_event_name, function(records){
-							// gzip
-							log.logger.trace(">>> get body");
-
-
-							if (0 === records.length) {
-
-								log.logger.error("get nothing");
-
-							} else if (1 != records.length) {
-								log.logger.error("records's length is not 1 :" + records.length);
-
-							} else {
-
-								var job_body = records[0].summary;
-
-								log.logger.debug("job_body(" + job_body + ")");
-
-								//set body to redis 
-								var body_redis_key = config.syncBodyRedisKey;
-								var body_redis_hash = source + ":" + id;
-								hset_redis(body_redis_key, body_redis_hash, job_body);
-								
-
-								// get the image of the job
-								//
-								var img_sql = config.syncImgSelectSql.replace('?', source);
-								img_sql = img_sql.replace('?', id);
-
-								var img_event_name = config.syncImgSelectMysqlSelectEvent + source + id;
-
-								mx_mysql.mysql_select(img_sql, img_event_name);
-
-								mx_mysql.emitter.on(img_event_name, function(records){ 
-
-									log.logger.trace("img event name length:" + records.length);
-
-									for (var i = 0; i < records.length; ++i) {
-										log.logger.debug("i:" + i);
-
-										var img_key = config.syncImgKey + source + ":" + id + ":" + records[i].imgsize;
-										var img_value = records[i].imgurl;
-
-										log.logger.debug("img_key(" + img_key + ",img_value(" + img_value + ")");
-
-										(function(img_key, img_value) {
-											log.logger.debug("img_key(" + img_key + ",img_value(" + img_value + ")");
-											redis.set(img_key, img_value, function(err){
-												if(err){
-
-													log.logger.error("redis set error:" + err.toString());
-
-												}else{
-													log.logger.info("redis set success:(" + img_key + "," + img_value);
-												}
-											});
-
-
-										})(img_key, img_value);
-									}
-									
-								});
-
-
-
-								// get base_info of the job
-								exports.syncBaseInfoSelectSql = "SELECT `title`, `push_date`, `url`, `ifimg`, `lang`, `updatetime`, `contenttype`, `status`, `hashcode`, `description` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
-								var base_info_sql = config.syncBaseInfoSelectSql.replace('?', source);
-								base_info_sql = base_info_sql.replace('?', id);
-
-								var base_info_event = config.syncBaseInfoSelectMysqlSelectEvent + source + id;
-
-								mx_mysql.mysql_select(base_info_sql, base_info_event);
-
-								mx_mysql.emitter.on(base_info_event, function(records){ 
-
-									
-									if (1 != records.length) {
-										log.logger.error("not found record in base_info of job");
-										return;
-									}
-									var json = JSON.stringify(records[0]);
-									log.logger.debug(json);
-
-									var body_key = config.syncBaseInfoRedisKey;
-									var body_hash = source + ":" + id;
-
-									hset_redis(body_key, body_hash, json);
-
-								});
-							}
-						});
-					} else {
-						log.logger.error("status is not 1 or 0");
-					}
-				}
-			});
-		})(sql, eventName, id);
-
-	}
-	callback(null, 'paralel_job success');
+			if (1 === status) {
+				callback(null, 'status is 1, just go');
+			}
+			else {
+				callback('status is not 1', null);
+			}
+		}
+	});
 }
-function body_img_job(source, min_id, max_id, callback) {
+
+function do_img_sync_task(source, id, callback){
+	log.logger.debug(id + " job's status is 1, let's go to set img to memcache!");
+	// get the image of the job
+	var img_sql = config.syncImgSelectSql.replace('?', source);
+	img_sql = img_sql.replace('?', id);
+
+	var img_event_name = config.syncImgSelectMysqlSelectEvent + source + id;
+	mx_mysql.mysql_select(img_sql, img_event_name);
+
+	mx_mysql.emitter.on(img_event_name, function(records){ 
+
+		log.logger.trace("img event name length:" + records.length);
+		async.map(records, 
+			function(record, callback){
+				var img_key = config.syncImgKey + source + ":" + id + ":" + record.imgsize;
+				var img_value = record.imgurl;
+
+				log.logger.debug("img_key(" + img_key + ",img_value(" + img_value + ")");
+
+				redis.set(img_key, img_value, function(err){
+					if(err){
+						callback("redis set error", null);
+
+					}else{
+						callback(null, "redis set success:(" + img_key + "," + img_value);
+					}
+				});
+
+			},
+			function(err, results){
+				callback(err, results);
+			}
+		);
+	});
+
+}
+
+function do_base_sync_task(source, id, callback){
+	// get base_info of the job
+	var base_info_sql = config.syncBaseInfoSelectSql.replace('?', source);
+	base_info_sql = base_info_sql.replace('?', id);
+
+	var base_info_event = config.syncBaseInfoSelectMysqlSelectEvent + source + id;
+
+	mx_mysql.mysql_select(base_info_sql, base_info_event);
+
+	mx_mysql.emitter.on(base_info_event, function(records){ 
+
+		if (1 != records.length) {
+			callback("not found record in base_info of job");
+		}
+		var json = JSON.stringify(records[0]);
+		log.logger.debug(json);
+
+		// gzip the base info.
+		zlib.deflate(json, function(err, buffer) {
+			if (err) {
+				callback(err.toString());
+			} else {
+
+				var body_key = config.syncBaseInfoRedisKey;
+				var body_hash = source + ":" + id;
+
+				hset_redis_callback(body_key, body_hash, json, callback);
+			}
+		});
+
+	});
+}
+
+function base_img_task(source, min_id, max_id, callback) {
+	log.logger.trace(">>> base_img_task");
+
+	async.map(MxArray(min_id, max_id), 
+			function(id, callback){
+				
+				log.logger.debug("begin sync job_id:" + id);
+
+				async.series([
+					function(callback) {	get_status_of_task(source, id, callback);},
+					function(callback) {	do_img_sync_task(source, id, callback);},
+					function(callback) {	do_base_sync_task(source, id, callback);}
+					],
+					function(err, results) {
+						callback(err, results);
+					});
+
+			},
+			function(err, results) {
+				callback(err, results);
+			}
+	);
+}
+
+function index_task(source, min_id, max_id, callback) {
+	log.logger.trace(">>> index_task");
+
+	var index_key = config.syncIndexRedisKey;
 	async.parallel([
 			function(callback){
-				do_parallel_job(source, min_id, max_id, callback);
+				var index_key = config.syncIndexRedisKey;
+				var min_hash_key = MIN_ID_HASH_KEY(source);
+				hset_redis_callback(index_key, min_hash_key, min_id, callback);
+
+			},
+			function(callback){
+				var max_hash_key = MAX_ID_HASH_KEY(source);
+				hset_redis(index_key, max_hash_key, max_id);
 			}
 			],
-			// optional callback
 			function(err, results){
-				// the results array will equal ['one','two'] even though
-				// the second function had a shorter timeout.
-				callback(null, 'body_img_job success');
+				callback(err, results);
 			});
-}
-
-function index_set(source, min_id, max_id, callback) {
-	var index_key = config.syncIndexRedisKey;
-	var min_hash_key = source + ":min_id";
-	hset_redis(index_key, min_hash_key, min_id);
-
-	var max_hash_key = source + ":max_id";
-	hset_redis(index_key, max_hash_key, max_id);
-
-	callback(null, 'redis success');
 }
 
 function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
@@ -325,54 +316,48 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 	}
 
 	log.logger.debug("[" + min_id + "," + max_id + "]");
-			//do_parallel_job(source, min_id, max_id), 
 
 	async.series([
-			function(callback){body_img_job(source, min_id, max_id, callback)},
-			function(callback){index_set(source, min_id, max_id, callback)}
+			function(callback){base_img_task(source, min_id, max_id, callback)},
+			function(callback){index_task(source, min_id, max_id, callback)}
 			],
 			function(err, results) {
 
 				if(err){
 
-					log.logger.error("redis set error:" + err.toString());
+					log.logger.error(err.toString());
 				}
-				log.logger.debug("results:"+ results);
+				log.logger.info("results:"+ results);
 			});
 
 }
 
 var sync_task = function (){
-	log.logger.trace(">>> sync_task");
+	log.logger.trace(">>> begin sync_task");
 
 	// get the [db_min_id, db_max_id] from mysql db.
-	//
+	log.logger.debug("get [db_min_id, db_max_id] from db");
 	mx_mysql.mysql_select(config.syncIndexSelectSql, config.syncIndexMysqlSelectEvent);
-
 	mx_mysql.emitter.on(config.syncIndexMysqlSelectEvent, function(records){
 		log.logger.debug("get reponse from mysql records length:" + records.length);
-
 		for (var i = 0; i < records.length; ++i) {
 
-			log.logger.debug("records[i].source:" + records[i].source);
-			log.logger.debug("records[i].done_min_id:" + records[i].done_min_id);
-			log.logger.debug("records[i].done_max_id:" + records[i].done_max_id);
+			log.logger.debug("records[" + i + "] -> source(" + records[i].source + "), done_min_id(" +  records[i].done_min_id + "), done_max_id(" + records[i].done_max_id + ")");
 
 			(function(i){
 
-				log.logger.debug("i:" + i);
 				var record = new Object;
 				record.source = records[i].source;
 				record.done_min_id = records[i].done_min_id;
 				record.done_max_id = records[i].done_max_id;
 				
 				record.key = config.syncIndexKey;
-				record.min_hash_key = record.source + ":done_min_id";
-				record.max_hash_key = record.source + ":done_max_id";
+				record.min_hash_key = MIN_ID_HASH_KEY(record.source);
+				record.max_hash_key = MAX_ID_HASH_KEY(record.source)
 				record.redis_event = "redis_get:" + i;
 
-			 	getDoneRangeFromRedis(record.key, record.min_hash_key, record.max_hash_key, record.redis_event);
-				
+				log.logger.debug("get [redis_min_id, redis_max_id] from redis");
+			 	get_done_range_from_redis(record.key, record.min_hash_key, record.max_hash_key, record.redis_event);
 
 				mx_mysql.emitter.on(record.redis_event, function(replies){
 					log.logger.info("after get [min_id, max_id] from redis length:" + replies.length + " i:" + i); 
@@ -391,7 +376,6 @@ var sync_task = function (){
 	});
 
 }
-
 
 exports.lang_adapter_task = lang_adapter_task;
 exports.country_adapter_task = country_adapter_task;
