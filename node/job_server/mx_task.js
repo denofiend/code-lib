@@ -38,6 +38,7 @@ function hset_redis_callback(key, hash_key, hash_val, callback){
 
 		}else{
 			log.logger.info("redis hset success:(" + key + "," + hash_key + "," + hash_val + ")");
+			callback(null, "redis hset success:(" + key + "," + hash_key + "," + hash_val + ")"); 
 		}
 	});
 
@@ -121,7 +122,7 @@ var channle_list_task = function (){
 				hash_key = "default_channle_list";
 			}
 
-			hset_redis(config.channlelistKey, hash_key, records[i].chanlelist);
+			hset_redis(config.channlelistKey, hash_key, records[i].channlelist);
 
 		}
 	});
@@ -137,11 +138,10 @@ function get_done_range_from_redis(key, min_hash_key, max_hash_key, eventName) {
 			log.logger.error("redis hmget error:" + err.toString());
 
 		}else{
-			log.logger.debug("rows.length:", rows.length);
 
 			for (i = 0; i < rows.length; ++i) {
 				var j = 0;
-				log.logger.debug("rows[i]:" + rows[i]);
+				log.logger.debug(" redis data[" + i + "]:" + rows[i]);
 			}
 
 			log.logger.info("redis hmget success:(" + key + "," + min_hash_key + "," + max_hash_key +")");
@@ -164,7 +164,7 @@ function get_status_of_task(source, id, callback) {
 		log.logger.debug("mysql here is right");
 
 		if (0 === records.length) {
-			callback('records.length is 0', null);
+			callback(null, "not found record in mysql for source(" + source + "),id(" + id +")");
 
 		} else if (1 != records.length) {
 			callback("records's length is not 1", null);
@@ -231,7 +231,8 @@ function do_base_sync_task(source, id, callback){
 	mx_mysql.emitter.on(base_info_event, function(records){ 
 
 		if (1 != records.length) {
-			callback("not found record in base_info of job");
+			callback("not found record in base_info of job", null);
+			return;
 		}
 		var json = JSON.stringify(records[0]);
 		log.logger.debug(json);
@@ -239,7 +240,7 @@ function do_base_sync_task(source, id, callback){
 		// gzip the base info.
 		zlib.deflate(json, function(err, buffer) {
 			if (err) {
-				callback(err.toString());
+				callback(err.toString(), null);
 			} else {
 
 				var body_key = config.syncBaseInfoRedisKey;
@@ -257,7 +258,7 @@ function base_img_task(source, min_id, max_id, callback) {
 
 	async.map(MxArray(min_id, max_id), 
 			function(id, callback){
-				
+
 				log.logger.debug("begin sync job_id:" + id);
 
 				async.series([
@@ -272,12 +273,11 @@ function base_img_task(source, min_id, max_id, callback) {
 			},
 			function(err, results) {
 				callback(err, results);
-			}
-	);
+			});
 }
 
 function index_task(source, min_id, max_id, callback) {
-	log.logger.trace(">>> index_task");
+	log.logger.trace(">>> index_task: source(" + source + "),id(" + id + ")");
 
 	var index_key = config.syncIndexRedisKey;
 	async.parallel([
@@ -297,6 +297,40 @@ function index_task(source, min_id, max_id, callback) {
 			});
 }
 
+
+function do_index_task_v2(source, id, callback) {
+	log.logger.trace(">>> do_index_task_v2: source(" + source + "),id(" + id + ")");
+	var key = config.syncIndexRedisKey + source;
+	redis.lpush(key, id, function(err, result) {
+		if(err){
+			callback("redis lpush error:" + err.toString(), null);
+
+		}else{
+			log.logger.info("redis lpush success:(" + key + "," + id + ")");
+			callback(null, "redis lpush success:(" + key + "," + id + ")"); 
+		}
+	});
+}
+
+function get_done_range_from_redis_v2(key, redis_event) {
+	log.logger.trace(">>> get_done_range_from_redis_v2: key(" + key + ")");
+
+	async.series([
+			function(callback) {	redis.lindex(key, 0, function(err, min_id) { callback(err, min_id);});},
+			function(callback) {	redis.lindex(key, -1, function(err, max_id) { callback(err, max_id);});}
+			],
+			function(err, results) {
+				if (err) {
+					log.logger.error(err.toString());
+				} else {
+					log.logger.debug("results:" + results);
+					mx_mysql.emitter.emit(redis_event, results);
+				}
+			});
+
+
+}
+
 function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 	log.logger.trace("sync_start: source(" + source + "), db[" + db_min_id + "," + db_max_id + "],redis[" + redis_min_id + "," + redis_max_id + "]");
 
@@ -312,11 +346,40 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 	if (null === redis_min_id) {
 		min_id = db_min_id;
 	} else{
-		min_id = redis_max_id + 1;
+		min_id = (redis_max_id < db_min_id ? redis_max_id : db_min_id);
+	}
+	if (0 === min_id) {
+		min_id = 1;
 	}
 
 	log.logger.debug("[" + min_id + "," + max_id + "]");
 
+	async.map(MxArray(min_id, max_id), 
+			function(id, callback){
+
+				log.logger.debug("begin sync job_id:" + id);
+
+				async.series([
+					function(callback) {	get_status_of_task(source, id, callback);},
+					function(callback) {	do_img_sync_task(source, id, callback);},
+					function(callback) {	do_base_sync_task(source, id, callback);},
+					function(callback) {	do_index_task_v2(source, id, callback);}
+					],
+					function(err, results) {
+						callback(err, results);
+					});
+
+			},
+			function(err, results) {
+				if(err){
+					log.logger.error(err.toString());
+				}
+				else{
+					log.logger.info("results:"+ results);
+				}
+			});
+
+	/*
 	async.series([
 			function(callback){base_img_task(source, min_id, max_id, callback)},
 			function(callback){index_task(source, min_id, max_id, callback)}
@@ -324,11 +387,13 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 			function(err, results) {
 
 				if(err){
-
 					log.logger.error(err.toString());
 				}
-				log.logger.info("results:"+ results);
+				else{
+					log.logger.info("results:"+ results);
+				}
 			});
+			*/
 
 }
 
@@ -351,13 +416,13 @@ var sync_task = function (){
 				record.done_min_id = records[i].done_min_id;
 				record.done_max_id = records[i].done_max_id;
 				
-				record.key = config.syncIndexKey;
+				record.key = config.syncIndexRedisKey + record.source;
 				record.min_hash_key = MIN_ID_HASH_KEY(record.source);
-				record.max_hash_key = MAX_ID_HASH_KEY(record.source)
+				record.max_hash_key = MAX_ID_HASH_KEY(record.source);
 				record.redis_event = "redis_get:" + i;
 
 				log.logger.debug("get [redis_min_id, redis_max_id] from redis");
-			 	get_done_range_from_redis(record.key, record.min_hash_key, record.max_hash_key, record.redis_event);
+			 	get_done_range_from_redis_v2(record.key, record.redis_event);
 
 				mx_mysql.emitter.on(record.redis_event, function(replies){
 					log.logger.info("after get [min_id, max_id] from redis length:" + replies.length + " i:" + i); 

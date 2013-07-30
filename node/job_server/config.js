@@ -3,8 +3,8 @@
  */
 
 /* redis config */
-exports.redisHost = "10.100.15.7"
-exports.redisPort = 6379
+exports.redisHost = "10.0.6.41"
+exports.redisPort = 11255
 
 
 /* log config */
@@ -41,11 +41,10 @@ exports.channlelistMysqlSelectEvent = "channlelistMysqlSelectEvent"
 exports.syncTaskCrontab = "1 * * * * *"
 exports.syncIndexSelectSql = "SELECT `source`, `rss_max_id`, `done_max_id`, `done_min_id` FROM `dc_index_job_tb`"
 
-exports.syncIndexKey = "dc_index_job_list"
 exports.syncIndexMysqlSelectEvent = "syncIndexMysqlSelectEvent"
-exports.syncIndexRedisKey = "dc_index_job_list"
+exports.syncIndexRedisKey = "dc_index_job_list:"
 
-exports.syncDoneJobSelectSql = "SELECT `status` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
+exports.syncDoneJobSelectSql = "SELECT `status` FROM `dc_task_status_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncDoneJobSelectMysqlSelectEvent = "syncDoneJobSelectMysqlSelectEvent"
 
 exports.syncBodySelectSql = "SELECT `summary` FROM `dc_done_job_body_tb` WHERE `source` = '?' AND `id` = ?"
