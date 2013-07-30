@@ -56,7 +56,7 @@ exports.syncImgSelectMysqlSelectEvent = "syncImgSelectMysqlSelectEvent"
 exports.syncImgKey = "dc_img:"
 
 
-exports.syncBaseInfoSelectSql = "SELECT `title`, `pushdate`, `url`, `ifimg`, `lang`, `updatetime`, `contenttype`, `status`, `hashcode`, `description` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
+exports.syncBaseInfoSelectSql = "SELECT `title`, `pushdate`, `url`, `ifimg`, `lang`, `updatetime`, `contenttype`, `status`, `hashcode`, `description`, `source`, `id` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncBaseInfoSelectMysqlSelectEvent = "syncBaseInfoSelectMysqlSelectEvent"
 exports.syncBaseInfoRedisKey = "dc_done_job_base_cache";
 

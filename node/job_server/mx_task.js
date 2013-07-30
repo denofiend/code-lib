@@ -8,7 +8,8 @@ var redisModule = require("redis");
 var async = require("async");
 var zlib = require('zlib');
 
-var redis = redisModule.createClient(config.redisPort,config.redisHost,{no_ready_check:true});
+var redis = redisModule.createClient(config.redisPort,config.redisHost,{no_ready_check:true, return_buffers: true });
+
 redis.on("error", function (err) {
 	    log.logger.error("redis error event - " + config.redisHost + ":" + config.redisPort + " - " + err.toString());
 });
@@ -129,29 +130,6 @@ var channle_list_task = function (){
 
 }
 
-function get_done_range_from_redis(key, min_hash_key, max_hash_key, eventName) {
-	log.logger.trace(">>> get_done_range_from_redis: key: " + key + ", min_hash_key:" + min_hash_key + ",max_hash_key:" + max_hash_key);
-
-	redis.hmget(key, min_hash_key, max_hash_key, function(err, rows){
-		if(err){
-
-			log.logger.error("redis hmget error:" + err.toString());
-
-		}else{
-
-			for (i = 0; i < rows.length; ++i) {
-				var j = 0;
-				log.logger.debug(" redis data[" + i + "]:" + rows[i]);
-			}
-
-			log.logger.info("redis hmget success:(" + key + "," + min_hash_key + "," + max_hash_key +")");
-
-			log.logger.debug("begin emitting: mxevent(" + eventName + ")");
-			mx_mysql.emitter.emit(eventName, rows);
-		}
-	});
-}
-
 function get_status_of_task(source, id, callback) {
 	/* get status from the db */
 	var tmp_sql = config.syncDoneJobSelectSql.replace('?', source);
@@ -246,57 +224,12 @@ function do_base_sync_task(source, id, callback){
 				var body_key = config.syncBaseInfoRedisKey;
 				var body_hash = source + ":" + id;
 
-				hset_redis_callback(body_key, body_hash, json, callback);
+				hset_redis_callback(body_key, body_hash, buffer, callback);
 			}
 		});
 
 	});
 }
-
-function base_img_task(source, min_id, max_id, callback) {
-	log.logger.trace(">>> base_img_task");
-
-	async.map(MxArray(min_id, max_id), 
-			function(id, callback){
-
-				log.logger.debug("begin sync job_id:" + id);
-
-				async.series([
-					function(callback) {	get_status_of_task(source, id, callback);},
-					function(callback) {	do_img_sync_task(source, id, callback);},
-					function(callback) {	do_base_sync_task(source, id, callback);}
-					],
-					function(err, results) {
-						callback(err, results);
-					});
-
-			},
-			function(err, results) {
-				callback(err, results);
-			});
-}
-
-function index_task(source, min_id, max_id, callback) {
-	log.logger.trace(">>> index_task: source(" + source + "),id(" + id + ")");
-
-	var index_key = config.syncIndexRedisKey;
-	async.parallel([
-			function(callback){
-				var index_key = config.syncIndexRedisKey;
-				var min_hash_key = MIN_ID_HASH_KEY(source);
-				hset_redis_callback(index_key, min_hash_key, min_id, callback);
-
-			},
-			function(callback){
-				var max_hash_key = MAX_ID_HASH_KEY(source);
-				hset_redis(index_key, max_hash_key, max_id);
-			}
-			],
-			function(err, results){
-				callback(err, results);
-			});
-}
-
 
 function do_index_task_v2(source, id, callback) {
 	log.logger.trace(">>> do_index_task_v2: source(" + source + "),id(" + id + ")");
@@ -336,23 +269,32 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 
 	if ((db_min_id === redis_min_id && db_max_id === redis_max_id) || (0 === db_min_id && 0 === db_max_id)) {
 
-		log.logger.info("not need sync. source(" + source + "),[db_min_id, db_max_id]->[" + db_min_id + "," + db_max_id + "]");
+		log.logger.info("not need sync. source(" + source + "), db[" + db_min_id + "," + db_max_id + "],redis[" + redis_min_id + "," + redis_max_id + "]");
+
 		return;
 	}
-
 
 	var max_id = db_max_id;
 	var min_id;
 	if (null === redis_min_id) {
 		min_id = db_min_id;
 	} else{
+		//min_id = (redis_max_id < db_min_id ? redis_max_id : db_min_id) + 1;
 		min_id = (redis_max_id < db_min_id ? redis_max_id : db_min_id);
 	}
+
 	if (0 === min_id) {
 		min_id = 1;
 	}
 
 	log.logger.debug("[" + min_id + "," + max_id + "]");
+
+	/*
+	if (min_id > max_id) {
+		log.logger.info("not need sync. source(" + source + "), db[" + db_min_id + "," + db_max_id + "],redis[" + redis_min_id + "," + redis_max_id + "]");
+		return;
+	}
+	*/
 
 	async.map(MxArray(min_id, max_id), 
 			function(id, callback){
@@ -379,22 +321,6 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 				}
 			});
 
-	/*
-	async.series([
-			function(callback){base_img_task(source, min_id, max_id, callback)},
-			function(callback){index_task(source, min_id, max_id, callback)}
-			],
-			function(err, results) {
-
-				if(err){
-					log.logger.error(err.toString());
-				}
-				else{
-					log.logger.info("results:"+ results);
-				}
-			});
-			*/
-
 }
 
 var sync_task = function (){
@@ -405,6 +331,7 @@ var sync_task = function (){
 	mx_mysql.mysql_select(config.syncIndexSelectSql, config.syncIndexMysqlSelectEvent);
 	mx_mysql.emitter.on(config.syncIndexMysqlSelectEvent, function(records){
 		log.logger.debug("get reponse from mysql records length:" + records.length);
+
 		for (var i = 0; i < records.length; ++i) {
 
 			log.logger.debug("records[" + i + "] -> source(" + records[i].source + "), done_min_id(" +  records[i].done_min_id + "), done_max_id(" + records[i].done_max_id + ")");
@@ -417,8 +344,6 @@ var sync_task = function (){
 				record.done_max_id = records[i].done_max_id;
 				
 				record.key = config.syncIndexRedisKey + record.source;
-				record.min_hash_key = MIN_ID_HASH_KEY(record.source);
-				record.max_hash_key = MAX_ID_HASH_KEY(record.source);
 				record.redis_event = "redis_get:" + i;
 
 				log.logger.debug("get [redis_min_id, redis_max_id] from redis");
