@@ -606,7 +606,6 @@ attrValue	html/extjs/ext-dev.js	/^    function attrValue(n, attr) {$/;"	f
 attrValue	html/extjs/src/dom/Query.js	/^    function attrValue(n, attr) {$/;"	f
 bad	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_ICU4J/BigDecimal-all-last.js	/^ function bad(prefix, s) {$/;"	f
 badarg	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_ICU4J/BigDecimal-all-last.js	/^ function badarg(name, pos, value) {$/;"	f
-base_img_task	mx_task.js	/^function base_img_task(source, min_id, max_id, callback) {$/;"	f
 basicLayout	node_modules/log4js/lib/layouts.js	/^function basicLayout (loggingEvent) {$/;"	f
 bb	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function bb(a){var b;return a==null?Mr:yc(a)?cb(wc(a)):xc(a,1)?Nr:(b=a,zc(b)?b.gC():Gc).d}$/;"	f
 bc	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function bc(a,b){a.b+=b}$/;"	f
@@ -989,6 +988,7 @@ doWrite	node_modules/log4js/node_modules/readable-stream/lib/_stream_writable.js
 do_base_sync_task	mx_task.js	/^function do_base_sync_task(source, id, callback){$/;"	f
 do_cmd	node_modules/time/build/Makefile	/^define do_cmd$/;"	m
 do_img_sync_task	mx_task.js	/^function do_img_sync_task(source, id, callback){$/;"	f
+do_index_task_v2	mx_task.js	/^function do_index_task_v2(source, id, callback) {$/;"	f
 do_postbuilds	node_modules/time/build/Makefile	/^define do_postbuilds$/;"	m
 dodivide	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_ICU4J/BigDecimal-all-last.js	/^ function dodivide(code, rhs, set, scale) {$/;"	f
 done	node_modules/log4js/node_modules/readable-stream/lib/_stream_transform.js	/^function done(stream, er) {$/;"	f
@@ -1415,7 +1415,7 @@ getSlices	html/extjs/packages/ext-theme-neutral/sass/example/slicer.js	/^    fun
 getTimezone	node_modules/time/index.js	/^function getTimezone () {$/;"	f
 getTimezoneAbbr	node_modules/time/index.js	/^function getTimezoneAbbr () {$/;"	f
 getTopLevelContext	node_modules/log4js/test/configureNoLevels-test.js	/^function getTopLevelContext(nop, configToTest, name) {$/;"	f
-get_done_range_from_redis	mx_task.js	/^function get_done_range_from_redis(key, min_hash_key, max_hash_key, eventName) {$/;"	f
+get_done_range_from_redis_v2	mx_task.js	/^function get_done_range_from_redis_v2(key, redis_event) {$/;"	f
 get_status_of_task	mx_task.js	/^function get_status_of_task(source, id, callback) {$/;"	f
 gg	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function gg(a){hg.call(this,a,0,a.length)}$/;"	f
 gi	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function gi(a,b){var c;if(b<0){throw new nk('Negative exponent')}if(b==0){return Jh}else if(b==1||a.eQ(Jh)||a.eQ(Nh)){return a}if(!a.gb(0)){c=1;while(!a.gb(c)){++c}return ei(Ai(c*b),a.fb(c).db(b))}return oo(a,b)}$/;"	f
@@ -1473,7 +1473,6 @@ inc	node_modules/log4js/node_modules/semver/semver.js	/^function inc (version, r
 increaseFileIndex	node_modules/log4js/lib/streams/RollingFileStream.js	/^    function increaseFileIndex (fileToRename, cb) {$/;"	f
 increaseMaxAllowedPacketIfNeeded	node_modules/mysql/test/integration/connection/test-send-and-receive-large-packets.js	/^function increaseMaxAllowedPacketIfNeeded() {$/;"	f
 index	node_modules/log4js/lib/streams/RollingFileStream.js	/^    function index(filename_) {$/;"	f
-index_task	mx_task.js	/^function index_task(source, min_id, max_id, callback) {$/;"	f
 init	node_modules/time/src/time.cc	/^  static void init (Handle<Object> target) {$/;"	f	file:	signature:(Handle<Object> target)
 initHook	node_modules/log4js/lib/appenders/hookio.js	/^function initHook(hookioOptions) {$/;"	f
 initReloadConfiguration	node_modules/log4js/lib/log4js.js	/^function initReloadConfiguration(filename, options) {$/;"	f

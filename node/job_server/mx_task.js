@@ -31,30 +31,64 @@ function MxArray(min_id, max_id) {
 }
 
 function hset_redis_callback(key, hash_key, hash_val, callback){
-	log.logger.trace(">>> hset_redis");
+	log.logger.trace(">>> hset_redis_callback");
 
-	redis.hset(key, hash_key, hash_val, function(err){
-		if(err){
-			callback("redis hset error:" + err.toString(), null);
-
-		}else{
-			log.logger.info("redis hset success:(" + key + "," + hash_key + "," + hash_val + ")");
-			callback(null, "redis hset success:(" + key + "," + hash_key + "," + hash_val + ")"); 
-		}
-	});
+	async.series([
+			function(callback){
+				redis.hset(key, hash_key, hash_val, function(err){
+					if (err) {
+						callback("redis hset error:" + err.toString(), null);
+					} else {
+						callback(null, "redis hset success: key(" + key + "),hash_key(" + hash_key + ")");
+					}
+				});
+			},
+			function(callback){
+				redis.expire(key, config.keyTimeOut, function(err){
+					log.logger.debug("redis.expire, key(" + key + ")");
+					if(err){
+						callback("redis set timeout 30 days error:" + err.toString(), null);
+					}else{
+						callback(null, "redis hset success with timeout 30 days:(" + key + "," + hash_key + ")"); 
+					}
+				});
+			}],
+			function(err, results){
+				callback(err, results);
+			});
 
 }
 
 function hset_redis(key, hash_key, hash_val){
 	log.logger.trace(">>> hset_redis");
 
-	redis.hset(key, hash_key, hash_val, function(err){
-		if(err){
-			log.logger.error("redis hset error:" + err.toString());
-		}else{
-			log.logger.info("redis hset success:(" + key + "," + hash_key + "," + hash_val + ")");
-		}
-	});
+	async.series([
+			function(callback){
+				redis.hset(key, hash_key, hash_val, function(err){
+					if (err) {
+						callback("redis hset error:" + err.toString(), null);
+					} else {
+						callback(null, "redis hset success: key(" + key + "),hash_key(" + hash_key + ")");
+					}
+				});
+			},
+			function(callback){
+				redis.expire(key, config.keyTimeOut, function(err){
+					log.logger.debug("redis.expire, key(" + key + ")");
+					if(err){
+						callback("redis set timeout 30 days error:" + err.toString(), null);
+					}else{
+						callback(null, "redis hset success with timeout 30 days:(" + key + "," + hash_key + "," + hash_val + ")"); 
+					}
+				});
+			}],
+			function(err, results){
+				if(err){
+					log.logger.error("redis hset error:" + err.toString());
+				}else{
+					log.logger.info("redis hset success with timeout 30 days:(" + key + "," + hash_key + "," + hash_val + ")");
+				}
+			});
 
 }
 
@@ -179,15 +213,29 @@ function do_img_sync_task(source, id, callback){
 
 				log.logger.debug("img_key(" + img_key + ",img_value(" + img_value + ")");
 
-				redis.set(img_key, img_value, function(err){
-					if(err){
-						callback("redis set error", null);
-
-					}else{
-						callback(null, "redis set success:(" + img_key + "," + img_value);
-					}
-				});
-
+				async.series([
+					function(callback){
+						redis.set(img_key, img_value, function(err){
+							if (err) {
+								callback("redis set error: " + err.toString(), null);
+							} else {
+								callback(null, "redis set success:(" + img_key + "," + img_value);
+							}
+						});
+					},
+					function(callback){
+						redis.expire(img_key, config.keyTimeOut, function(err){
+							log.logger.debug("redis.expire, key(" + img_key + ")");
+							if(err){
+								callback("redis set timeout 30 days error:" + err.toString(), null);
+							}else{
+								callback(null, "redis set success with timeout 30 days:(" + img_key + "," + img_value);
+							}
+						});
+					}],
+					function(err, results){
+						callback(err, results);
+					});
 			},
 			function(err, results){
 				callback(err, results);
@@ -225,6 +273,7 @@ function do_base_sync_task(source, id, callback){
 				var body_hash = source + ":" + id;
 
 				hset_redis_callback(body_key, body_hash, buffer, callback);
+				//hset_redis_callback(body_key, body_hash, json, callback);
 			}
 		});
 
@@ -234,23 +283,38 @@ function do_base_sync_task(source, id, callback){
 function do_index_task_v2(source, id, callback) {
 	log.logger.trace(">>> do_index_task_v2: source(" + source + "),id(" + id + ")");
 	var key = config.syncIndexRedisKey + source;
-	redis.lpush(key, id, function(err, result) {
-		if(err){
-			callback("redis lpush error:" + err.toString(), null);
 
-		}else{
-			log.logger.info("redis lpush success:(" + key + "," + id + ")");
-			callback(null, "redis lpush success:(" + key + "," + id + ")"); 
-		}
-	});
+	async.series([
+			function(callback){
+				redis.zadd(key, id, id, function(err, result) {
+					if (err) {
+						callback("redis zadd error:" + err.toString(), null);
+					} else {
+						callback(null, "redis zadd success: key(" + key + "),id (" + id + ")");
+					}
+				});
+			},
+			function(callback){
+				redis.expire(key, config.keyTimeOut, function(err){
+					log.logger.debug("redis.expire, key(" + key + ")");
+					if(err){
+						callback("redis set timeout 30 days error:" + err.toString(), null);
+					}else{
+						callback(null, "redis zadd success with timeout 30 days:(" + key + "," + id + ")");
+					}
+				});
+			}],
+			function(err, results){
+				callback(err, results);
+			});
 }
 
 function get_done_range_from_redis_v2(key, redis_event) {
 	log.logger.trace(">>> get_done_range_from_redis_v2: key(" + key + ")");
 
 	async.series([
-			function(callback) {	redis.lindex(key, 0, function(err, min_id) { callback(err, min_id);});},
-			function(callback) {	redis.lindex(key, -1, function(err, max_id) { callback(err, max_id);});}
+			function(callback) {	redis.zrange(key, 0, 0, function(err, min_id) { callback(err, min_id);});},
+			function(callback) {	redis.zrange(key, -1, -1, function(err, max_id) { callback(err, max_id);});}
 			],
 			function(err, results) {
 				if (err) {
@@ -275,26 +339,20 @@ function sync_start(source, db_min_id, db_max_id, redis_min_id, redis_max_id) {
 	}
 
 	var max_id = db_max_id;
-	var min_id;
+	var min_id = redis_max_id;
 	if (null === redis_min_id) {
-		min_id = db_min_id;
-	} else{
-		//min_id = (redis_max_id < db_min_id ? redis_max_id : db_min_id) + 1;
-		min_id = (redis_max_id < db_min_id ? redis_max_id : db_min_id);
+		min_id = 0;
 	}
-
-	if (0 === min_id) {
-		min_id = 1;
-	}
+	min_id++;
 
 	log.logger.debug("[" + min_id + "," + max_id + "]");
 
-	/*
+	
 	if (min_id > max_id) {
 		log.logger.info("not need sync. source(" + source + "), db[" + db_min_id + "," + db_max_id + "],redis[" + redis_min_id + "," + redis_max_id + "]");
 		return;
 	}
-	*/
+	
 
 	async.map(MxArray(min_id, max_id), 
 			function(id, callback){

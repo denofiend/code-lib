@@ -5,6 +5,7 @@
 /* redis config */
 exports.redisHost = "10.0.6.41"
 exports.redisPort = 11255
+exports.keyTimeOut = 30*24*60*60
 
 
 /* log config */
