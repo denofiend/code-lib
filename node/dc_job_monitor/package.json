@@ -1,0 +1,29 @@
+{
+	"name": "dc_job_monitor",
+		"description": "check the data in redis, resync the data from mysql!",
+		"version": "1.0.0",
+		"author": {
+			"name": "DenoFiend",
+			"email": "denofiend@gmail.com"
+		},
+		"repository": {
+			"type": "git"
+		},
+		"main": "./index.js",
+		"dependencies": {
+			"express": ">=3.0.2",
+			"jade": ">=0.27.7",
+			"async": ">=0.2.5",
+			"redis": ">=0.8.2"
+		},
+		"engines": {
+			"node": ">= 0.6.19"
+		},
+		"_id": "dc_job_monitor@0.1.0",
+		"optionalDependencies": {},
+		"_engineSupported": true,
+		"_npmVersion": "1.1.21",
+		"_nodeVersion": "v0.6.19",
+		"_defaultsLoaded": true,
+		"_from": "maxthon"
+}

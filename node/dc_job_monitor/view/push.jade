@@ -1,0 +1,94 @@
+!!!5
+html
+  head
+    title Push Monitor
+    link(href="/css/bonmon.css", rel="stylesheet")
+    script(src="/js/jquery-1.7.1.min.js")
+    script(src="/js/push/model.js")
+    script(src="/js/push/widget.js")
+    script
+      var conf = !{confstr};
+      $(function(){
+        var cspanel = $('#cs');
+        var cscnt = conf.cs.count;
+        var cspt = conf.cs.port;
+        var csips = conf.cs.ips;
+        for(var i=0;i<csips.length;++i){
+          var cs = $(widget.createCSPanel(csips[i],cspt,cscnt));
+          cs.find('.refresh').click(model.refreshCS);
+          cs.find('.configure').click(model.confCS);
+          cs.appendTo(cspanel);
+        }
+
+        var bspanel = $('#bs');
+        var bscnt = conf.bs.count;
+        var bspt = conf.bs.port;
+        var bsips = conf.bs.ips;
+        for(var i=0;i<bsips.length;++i){
+          var bs = $(widget.createBSPanel(bsips[i],bspt,bscnt));
+          bs.find('a.set-interval')
+          bs.find('.refresh').click(model.refreshBS);
+          bs.find('.configure').click(model.confBS);
+          bs.appendTo(bspanel);
+        }
+        var pspanel = $('#ps');
+        var pscnt = conf.ps.count;
+        var pspt = conf.ps.port;
+        var psips = conf.ps.ips;
+        for(var i=0;i<psips.length;++i){
+          var ps = $(widget.createPSPanel(psips[i],pspt,pscnt));
+          ps.find('a.set-interval')
+          ps.find('.refresh').click(model.refreshPS);
+          ps.find('.configure').click(model.confPS);
+          ps.appendTo(pspanel);
+        }
+
+        $('#refreshcs').click(function(event){
+          event.preventDefault();
+          for(var i=0;i<csips.length;++i){
+            for(var j=0;j<cscnt;++j){
+              (function(ip,port){
+                model.fetchCS(ip,port);
+              })(csips[i],cspt+j);
+            }
+          }
+        });
+
+        $('#refreshbs').click(function(event){
+          event.preventDefault();
+          for(var i=0;i<bsips.length;++i){
+            for(var j=0;j<bscnt;++j){
+              (function(ip,port){
+                model.fetchBS(ip,port);
+              })(bsips[i],bspt+j);
+            }
+          }
+        });
+
+        $('#refreshps').click(function(event){
+          event.preventDefault();
+          for(var i=0;i<psips.length;++i){
+            for(var j=0;j<pscnt;++j){
+              (function(ip,port){
+                model.fetchPS(ip,port);
+              })(psips[i],pspt+j);
+            }
+          }
+        });
+      });
+
+  body
+    .page
+      .cstitle
+        a#refreshcs(href="#") Connection Server Group
+          #cshint ( 0 )
+      #cs
+
+      .bstitle
+        a#refreshbs(href="#") Broadcast Server Group
+      #bs
+
+      .pstitle
+        a#refreshps(href="#") Push Server Group
+      #ps
+
