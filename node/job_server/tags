@@ -205,8 +205,6 @@ Logger	node_modules/log4js/lib/logger.js	/^function Logger (name, level) {$/;"	f
 LoggingEvent	node_modules/log4js/lib/logger.js	/^function LoggingEvent (categoryName, level, data, logger) {$/;"	f
 M	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function M(){}$/;"	f
 MAKEFLAGS	node_modules/time/build/Makefile	/^MAKEFLAGS=-r$/;"	m
-MAX_ID_HASH_KEY	mx_task.js	/^function MAX_ID_HASH_KEY(source){$/;"	f
-MIN_ID_HASH_KEY	mx_task.js	/^function MIN_ID_HASH_KEY(source){$/;"	f
 MOCHA	node_modules/time/Makefile	/^MOCHA ?= .\/node_modules\/.bin\/mocha$/;"	m
 MOCHA_OPTS	node_modules/express/Makefile	/^MOCHA_OPTS= --check-leaks$/;"	m
 MathContext	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_ICU4J/BigDecimal-all-last.js	/^ function MathContext() {$/;"	f
@@ -940,6 +938,7 @@ decode	node_modules/express/node_modules/connect/node_modules/qs/index.js	/^func
 decodeChunk	node_modules/log4js/node_modules/readable-stream/lib/_stream_writable.js	/^function decodeChunk(state, chunk, encoding) {$/;"	f
 default	test.py	/^    def default(self,obj):$/;"	m	class:MyEncoder	access:public
 defaultValue	node_modules/express/node_modules/connect/lib/middleware/csrf.js	/^function defaultValue(req) {$/;"	f
+del_old_records	mx_task.js	/^function del_old_records(source, sta, end) {$/;"	f
 deleteAnyExistingFile	node_modules/log4js/lib/streams/DateRollingFileStream.js	/^    function deleteAnyExistingFile(cb) {$/;"	f
 depfile	node_modules/time/build/Makefile	/^depfile = $(depsdir)\/$(call replace_spaces,$@).d$/;"	m
 depsdir	node_modules/time/build/Makefile	/^depsdir := $(builddir)\/.deps$/;"	m
@@ -985,9 +984,12 @@ doMany	html/extjs/src/util/Memento.js	/^    function doMany (doOne, src, target,
 doTheLogging	node_modules/log4js/examples/log-rolling.js	/^function doTheLogging(x) {$/;"	f
 doTheLogging	node_modules/log4js/examples/smtp-appender.js	/^function doTheLogging(x) {$/;"	f
 doWrite	node_modules/log4js/node_modules/readable-stream/lib/_stream_writable.js	/^function doWrite(stream, state, len, chunk, encoding, cb) {$/;"	f
+do_base_del_task	mx_task.js	/^function do_base_del_task(source, id, callback) {$/;"	f
 do_base_sync_task	mx_task.js	/^function do_base_sync_task(source, id, callback){$/;"	f
 do_cmd	node_modules/time/build/Makefile	/^define do_cmd$/;"	m
+do_img_del_task	mx_task.js	/^function do_img_del_task(source, id, callback) {$/;"	f
 do_img_sync_task	mx_task.js	/^function do_img_sync_task(source, id, callback){$/;"	f
+do_index_del_v2	mx_task.js	/^function do_index_del_v2(source, id, callback) {$/;"	f
 do_index_task_v2	mx_task.js	/^function do_index_task_v2(source, id, callback) {$/;"	f
 do_postbuilds	node_modules/time/build/Makefile	/^define do_postbuilds$/;"	m
 dodivide	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_ICU4J/BigDecimal-all-last.js	/^ function dodivide(code, rhs, set, scale) {$/;"	f
@@ -1416,6 +1418,7 @@ getTimezone	node_modules/time/index.js	/^function getTimezone () {$/;"	f
 getTimezoneAbbr	node_modules/time/index.js	/^function getTimezoneAbbr () {$/;"	f
 getTopLevelContext	node_modules/log4js/test/configureNoLevels-test.js	/^function getTopLevelContext(nop, configToTest, name) {$/;"	f
 get_done_range_from_redis_v2	mx_task.js	/^function get_done_range_from_redis_v2(key, redis_event) {$/;"	f
+get_set_count_from_redis	mx_task.js	/^function get_set_count_from_redis(key, redis_event) {$/;"	f
 get_status_of_task	mx_task.js	/^function get_status_of_task(source, id, callback) {$/;"	f
 gg	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function gg(a){hg.call(this,a,0,a.length)}$/;"	f
 gi	node_modules/mysql/node_modules/bignumber.js/perf/lib/bigdecimal_GWT/bigdecimal.js	/^function gi(a,b){var c;if(b<0){throw new nk('Negative exponent')}if(b==0){return Jh}else if(b==1||a.eQ(Jh)||a.eQ(Nh)){return a}if(!a.gb(0)){c=1;while(!a.gb(c)){++c}return ei(Ai(c*b),a.fb(c).db(b))}return oo(a,b)}$/;"	f
@@ -2026,6 +2029,9 @@ readStart	node_modules/log4js/node_modules/readable-stream/test/simple/test-stre
 readStop	node_modules/log4js/node_modules/readable-stream/test/simple/test-stream2-push.js	/^function readStop() {$/;"	f
 readableAddChunk	node_modules/log4js/node_modules/readable-stream/lib/_stream_readable.js	/^function readableAddChunk(stream, state, chunk, addToFront) {$/;"	f
 ready_check	node_modules/redis/test.js	/^    function ready_check() {$/;"	f
+redis_del_key	mx_task.js	/^function 	redis_del_key(key) {$/;"	f
+redis_del_key_callback	mx_task.js	/^function redis_del_key_callback(key) {$/;"	f
+redis_set	mx_task.js	/^function redis_set(key, value, callback) {$/;"	f
 refire	html/extjs/builds/ext-all-rtl-sandbox-debug-w-comments.js	/^        function refire(eventName) {$/;"	f
 refire	html/extjs/builds/ext-all-rtl-sandbox-debug.js	/^        function refire(eventName) {$/;"	f
 refire	html/extjs/builds/ext-all-rtl-sandbox-dev.js	/^        function refire(eventName) {$/;"	f

@@ -11,6 +11,7 @@ mx_task.sync_task();
 
 
 /*
+
 // for the dc_lang_adapter_tb task(sync data from db to redis)
 new cronJob(config.langTaskCrontab, function(){
 		log.logger.info('>>> start lang adapter sync task');
@@ -42,5 +43,7 @@ new cronJob(config.syncTaskCrontab, function(){
 			mx_task.sync_task();
 
 }, null, true);
+
 */
+
   	
