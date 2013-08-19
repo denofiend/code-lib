@@ -4,7 +4,7 @@
 
 /* redis config */
 exports.redisHost = "10.0.6.41"
-exports.redisPort = 11255
+exports.redisPort = 11256
 exports.keyTimeOut = 30*24*60*60
 
 
@@ -20,26 +20,26 @@ exports.verifyKey = 'eUYhD8Vdl1TUWhiVP2P__GeC'
 
 
 /* lang adapter task config*/
-exports.langTaskCrontab = "5 * * * * *"
+exports.langTaskCrontab = "*/5 * * * *"
 exports.langSelectSql = "SELECT `langad`, `langios` FROM `dc_lang_adapter_tb`"
 exports.langKey = "dc_lang_adapter_list"
 exports.langMysqlSelectEvent = "langMysqlSelectEvent"
 
 /* country adapter task config*/
-exports.countryTaskCrontab = "5 * * * * *"
+exports.countryTaskCrontab = "*/5 * * * *"
 exports.countrySelectSql = "SELECT `countryad`, `countryios` FROM `dc_country_adapter_tb`"
 exports.countryKey = "dc_country_adapter_list"
 exports.countryMysqlSelectEvent = "countryMysqlSelectEvent"
 
 /* channlelist task config*/
-exports.channlelistTaskCrontab = "5 * * * * *"
+exports.channlelistTaskCrontab = "*/5 * * * *"
 exports.channlelistSelectSql = "SELECT `lang`, `country`, `sourcetype`, `channleid`, `version`, `updatetime`, `channlelist`, `channlelistversion`, `ifdefault` FROM `dc_channel_list_tb`"
 exports.channlelistKey = "dc_channel_list_infos"
 exports.channlelistMysqlSelectEvent = "channlelistMysqlSelectEvent"
 
 
 /* sync task config*/
-exports.syncTaskCrontab = "10 * * * * *"
+exports.syncTaskCrontab = "*/5 * * * *"
 exports.syncIndexSelectSql = "SELECT `source`, `rss_max_id`, `done_max_id`, `done_min_id`, `cache_count` FROM `dc_index_job_tb`"
 
 exports.syncIndexMysqlSelectEvent = "syncIndexMysqlSelectEvent"
@@ -51,6 +51,7 @@ exports.syncDoneJobSelectMysqlSelectEvent = "syncDoneJobSelectMysqlSelectEvent"
 exports.syncBodySelectSql = "SELECT `summary` FROM `dc_done_job_body_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncBodySelectMysqlSelectEvent = "syncBodySelectMysqlSelectEvent"
 exports.syncBodyRedisKey = "dc_done_job_body_cache"
+exports.syncBodyCount = 30
 
 exports.syncImgSelectSql = "SELECT `imgurl`, `imgsize` FROM `dc_done_job_img_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncImgSelectMysqlSelectEvent = "syncImgSelectMysqlSelectEvent"
@@ -60,6 +61,10 @@ exports.syncImgKey = "dc_img:"
 exports.syncBaseInfoSelectSql = "SELECT `title`, `pushdate`, `url`, `ifimg`, `lang`, `updatetime`, `contenttype`, `status`, `hashcode`, `description`, `source`, `id` FROM `dc_done_job_tb` WHERE `source` = '?' AND `id` = ?"
 exports.syncBaseInfoSelectMysqlSelectEvent = "syncBaseInfoSelectMysqlSelectEvent"
 exports.syncBaseInfoRedisKey = "dc_done_job_base_cache";
+
+exports.checkConsistencyCount = -10;
+
+exports.checkConsistencyCron = "0 1 * * *";
 
 /* db config*/
 exports.db_host = "10.0.6.247"
