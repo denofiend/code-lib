@@ -9,7 +9,7 @@ exports.keyTimeOut = 30*24*60*60
 
 
 /* log config */
-exports.serverLogPath = "/data/logs/qh_lottery.log"
+exports.serverLogPath = "/data/logs/lottery.log"
 exports.chukwaLogPath = "data/logs/chukwa.log"
 exports.logLevel = "trace"
 
@@ -28,4 +28,4 @@ exports.maxCallsn = 8; // = (maxCalls - 10) / 5
 
 
 /* rc4 key */
-exports.rc4Key = "51dd2b87308056da9f280b8e18b8bc79";
+exports.rc4Key = "";
