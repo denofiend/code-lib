@@ -1,152 +1,63 @@
-/*************************************************************************
-  > File Name: C.cpp
-  > Author: DenoFiend
-  > Mail: denofiend@gmail.com
-  > Created Time: 2013年03月01日 星期五 16时39分25秒
- ************************************************************************/
+/*
+Author: Shu LIN
+Data: 2012/4/14
+language: C++
+*/
 
-#include <iostream>
-#include <string.h>
+#include<iostream>
+#include<stdio.h>
+#include<algorithm>
 using namespace std;
 
+int m[2000000 + 5];
+int t[2000000 + 5];
 
-#define OUT(x) (cout << #x << " = " << x << endl)
+int main() {
+    // freopen("c.in", "r", stdin);
+    // freopen("c.out", "w", stdout);
 
-#define MAXN 2000001
+    int cases, x;
+    int a, b;
+    int i, j, k, l, s;
 
-typedef struct hash_node{
-	hash_node *next;
-	int val;
-}hash_node_t;
+    scanf("%d", &cases);
 
-hash_node_t hash[MAXN];
+    k = 1;
+    j = 0;
 
-bool hash_find(int n, int m){
-	hash_node_t *head = hash[n].next;
-
-	while (head)
-	{
-		if (head->val == m) return true;
-		head = head->next;
-	}
-
-	return false;
-}
-
-
-bool hash_add(int n, int m) {
-	hash_node_t * now = new hash_node_t;
-	if (NULL == now)
-	{
-		return false;
-	}
-	now->val = m;
-
-	now->next = hash[n].next;
-	hash[n].next = now;
-
-	return true;
-}
-
-void init(){
-	memset(hash, 0, sizeof(hash));
-
-	for (int n = 12; n < MAXN; ++n) {
-
-		int digit_pre = 1, digit_bak = 1;
-		int i = n, m;
-
-		while (i)
-		{
-			i /= 10;
-			digit_pre *= 10;
+    for (i = 1; i <= 2000000; ++i) {
+        if (k * 10 <= i) {
+            k *= 10;
+            ++j;
+        }
+        m[i] = i;
+        s = i;
+        for (l = 0; l < j; ++l) {
+            s = s % k * 10 + s / k;
+            if (s >= k && s < m[i])
+                m[i] = s;
 		}
+    }
 
-		i = n /10;
-		digit_bak = 10;
-		digit_pre /= 10;
+    for (x = 1; x <= cases; ++x) {
+        printf("Case #%d: ", x);
 
-		while (i)
-		{
-			m = n % digit_bak;
-			m = m * digit_pre + n / digit_bak;	
+        scanf("%d%d", &a, &b);
+        for (i = a; i <= b; ++i)
+            t[i] = m[i];
+        sort(t + a, t + b + 1);
 
-			i /= 10;
-			digit_pre /= 10;
-			digit_bak *= 10;
+        k = 1;
+        s = 0;
+        for (i = a + 1; i <= b; ++i)
+            if (t[i] == t[i - 1]) {
+                s += k;
+                ++k;
+            }
+            else
+                k = 1;
+        printf("%d\n", s);
+    }
 
-			if (m > n && m < MAXN && !hash_find(n, m)) {
-				hash_add(n, m);
-			}
-		}
-	}
+    return 0;
 }
-int cal1(int sta, int end) {
-	int ans = 0;
-	for (int n = sta; n <= end; ++n) {
-		hash_node_t * p = hash[n].next;
-		while (p)
-		{
-			if (p->val <= end) ans++;
-			p = p->next;
-		}
-
-	}
-	return ans;
-}
-
-int cal(int sta, int end) {
-
-	int ans = 0;
-	memset(hash, 0, sizeof(hash));
-
-	for (int n = sta; n <= end; ++n) {
-
-		int digit_pre = 1, digit_bak = 1;
-		int i = n, m;
-
-		while (i) 
-		{
-			digit_pre *= 10;
-			i /= 10;
-		}
-
-		i = n / 10;
-		digit_bak = 10;
-		digit_pre /= 10;
-
-		while (i)
-		{
-			m = n % digit_bak;
-			m = m * digit_pre + n / digit_bak;	
-
-			i /= 10;
-			digit_pre /= 10;
-			digit_bak *= 10;
-
-			if (n >= sta && m > n && m <= end && !hash_find(n, m)) {
-
-				ans++;
-				hash_add(n, m);
-			}
-		}
-	}
-
-	return ans;
-}
-
-int main(){
-
-	int T, A, B;
-	init();
-
-	cin >> T;
-
-	for (int i = 1; i <= T; ++i) {
-		cin >> A >> B;
-		cout << "Case #" << i << ": " << cal1(A, B) << endl; 
-	}
-
-	return 0;
-}
-

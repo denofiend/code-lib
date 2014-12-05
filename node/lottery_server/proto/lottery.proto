@@ -1,0 +1,100 @@
+//
+
+package qihoo.protocol.lottery;
+
+option java_package = "com.qihoo.lottery";
+option java_outer_classname = "Lottery";
+
+enum LotteryType {
+    NO = 0;
+    CALLS = 1;
+    INVITE_CODE = 2;
+}
+
+message QhLottery {
+   required LotteryType type = 1;       // 摇奖结果标识, NO: 没有中奖； CALLS: 奖励通话时长，返回分钟数；INVITE_CODE:邀请码
+   optional int32 calls  = 2;          // CALLS: 奖励通话时长，返回分钟数
+   optional string invitecode = 3;      // INVITE_CODE:邀请码
+   optional string nomsg = 4;          // 没有中奖的文案，保留字段
+   optional int64 createtime = 5;      // 摇奖时间，服务器时间
+}
+
+/*
+*    1. 摇奖接口
+*    POST /lottery/lt
+*
+*    RC4:encode(default_key, protobuf_encode(LotteryRequest))
+*
+*
+*   HTTP/1.1 200 OK
+*
+*   RC4:encode(default_key, protobuf_encode(LotteryResponse))
+*
+*/
+message LotteryRequest {
+    required string pn = 1;     // phone number of lottery user
+}
+
+message LotteryResponse {
+    required QhLottery lottery = 1;
+    required int32 num = 2;     // 剩余摇奖次数：
+}
+
+/*
+*    2. 获取摇奖历史接口：只返回邀请码
+*    POST /lottery/lth
+*
+*    RC4:encode(default_key, protobuf_encode(MgetLotterHistoryRequest))
+*
+*
+*   HTTP/1.1 200 OK
+*
+*   RC4:encode(default_key, protobuf_encode(MgetLotterHistoryResponse))
+*
+*/
+message MgetLotterHistoryRequest {
+    required string pn = 1;     // phone number of  user
+}
+
+message MgetLotterHistoryResponse {
+    repeated QhLottery history = 1;     // 返回邀请码列表
+}
+
+/*
+*    3. 打完电话以后，摇奖接口：只返回通话时长
+*    POST /lottery/clt
+*
+*    RC4:encode(default_key, protobuf_encode(AfterCallLotteryRequest))
+*
+*
+*   HTTP/1.1 200 OK
+*
+*   RC4:encode(default_key, protobuf_encode(AfterCallLotteryResponse))
+*
+*/
+message AfterCallLotteryRequest {
+    required string pn = 1;     // phone number of lottery user
+}
+message AfterCallLotteryResponse {
+    required QhLottery lotter = 1;
+}
+
+/*
+*    4. 获取剩余摇奖次数：客户端如果没有本地数据的时候来服务器拿。
+*    POST /lottery/ltn
+*
+*    RC4:encode(default_key, protobuf_encode(LeftLotteryNumRequest))
+*
+*
+*   HTTP/1.1 200 OK
+*
+*   RC4:encode(default_key, protobuf_encode(LeftLotteryNumResponse))
+*
+*/
+message LeftLotteryNumRequest {
+    required string pn = 1;     // phone number of lottery user
+}
+message LeftLotteryNumResponse {
+    required int32 num = 1;     // 剩余摇奖次数：
+    required int32 limit = 2;     // 一个用户一天摇奖次数：
+}
